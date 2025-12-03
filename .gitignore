@@ -1,0 +1,9 @@
+# IntelliJ/RustRover
+.idea/
+
+# Rust
+target/
+Cargo.lock
+
+# Env files
+.env
