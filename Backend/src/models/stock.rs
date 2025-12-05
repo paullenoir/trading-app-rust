@@ -12,11 +12,22 @@ pub struct Model {
     pub currency: Option<String>,
 }
 
-//C'est le placeholder pour les relations futures.
-//Un stock a plusieurs position
-////#[sea_orm(has_many = "super::position::Entity")]
+//QUOI: definir les relations
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
-pub enum Relation {}
+pub enum Relation {
+    #[sea_orm(has_many = "super::strategy_result::Entity")]
+    StrategyResults,
+}
+
+//COMMENT utiliser les relations
+//Pour l'entité Strategy (Entity), voici comment aller vers StrategyResult"
+impl Related<super::strategy_result::Entity> for Entity {
+    //Cette fonction retourne la définition de la relation à utiliser
+    fn to() -> RelationDef {
+        Relation::StrategyResults.def()
+        //.def() = Convertit en RelationDef (format utilisable par SeaORM)
+    }
+}
 
 //définit des hooks (actions automatiques) avant/après insert/update/delete.
 impl ActiveModelBehavior for ActiveModel {}
