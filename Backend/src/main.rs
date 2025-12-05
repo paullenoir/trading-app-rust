@@ -1,17 +1,27 @@
 mod models;
 mod routes;
+mod db;
 
-use actix_web::{App, HttpServer};
-use routes::health::health_check;
+use actix_web::{App, HttpServer, web};
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    println!("Starting server at http://localhost:8080");
+    dotenv::dotenv().ok();
 
-    HttpServer::new(|| {
+    println!("🔌 Connecting to database...");
+    let db = db::establish_connection()
+        .await
+        .expect("Failed to connect to database");
+    println!("✅ Database connected!");
+
+    println!("🚀 Starting server on http://127.0.0.1:8080");
+
+    HttpServer::new(move || {
         App::new()
-            .service(health_check)
+            .app_data(web::Data::new(db.clone()))
+            .configure(routes::configure_routes)
     })
-        .bind("127.0.0.1:8080")?
-        .run().await
+        .bind(("127.0.0.1", 8080))?
+        .run()
+        .await
 }
