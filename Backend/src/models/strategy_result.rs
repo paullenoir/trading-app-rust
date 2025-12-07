@@ -2,13 +2,15 @@ use serde::Serialize;
 use sea_orm::entity::prelude::*;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize)]
-#[sea_orm(table_name = "strategy_results")]
+//#[sea_orm(table_name = "strategy_results")]
+#[sea_orm(table_name = "strategy_results_test")]
 pub struct Model {
     #[sea_orm(primary_key)]
     pub strategy_id: i32,
     pub symbol: Option<String>,
-    pub date: Option<chrono::NaiveDate>,
+    pub date: Option<String>,
     pub recommendation: Option<String>,
+    pub metadata: Option<serde_json::Value>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

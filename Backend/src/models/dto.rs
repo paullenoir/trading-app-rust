@@ -19,6 +19,6 @@ pub struct StockInfo {
 pub struct StrategyWithResult {
     pub strategy_id: i32,
     pub strategy_name: Option<String>,
-    pub date: Option<chrono::NaiveDate>,
+    pub date: Option<String>,
     pub recommendation: Option<String>,
 }
