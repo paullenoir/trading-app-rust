@@ -6,20 +6,22 @@ use async_trait::async_trait;
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Recommendation {
     pub symbol: String,
-    pub recommendation: String,  // "BUY", "SELL", "HOLD"
-    pub metadata: Value,  // JSON flexible pour les métriques spécifiques
+    pub recommendation: Value,  // JSON flexible : "BUY" ou ["BUY", "SELL", "BUY"]
+    pub metadata: Value,         // JSON flexible pour les métriques spécifiques
 }
 
 //trait = Interface
 #[async_trait]
 pub trait StrategyCalculator {
-    // Méthode pour 1 symbole (simple)
+    // Méthode pour 1 symbole (simple) - OPTIONNELLE avec implémentation par défaut
     async fn calculate(
         &self,
-        symbol: &str,
-        config: &Value,
-        db: &DatabaseConnection,
-    ) -> Result<Recommendation, String>;
+        _symbol: &str,
+        _config: &Value,
+        _db: &DatabaseConnection,
+    ) -> Result<Recommendation, String> {
+        Err("Single symbol calculation not implemented for this strategy".to_string())
+    }
 
     // Méthode batch pour plusieurs symboles (optimisée)
     async fn calculate_batch(

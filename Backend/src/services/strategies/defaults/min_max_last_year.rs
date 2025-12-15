@@ -85,7 +85,7 @@ impl StrategyCalculator for MinMaxLastYear {
 
             results.push(Recommendation {
                 symbol: symbol.clone(),
-                recommendation: recommendation.to_string(),
+                recommendation: json!(recommendation),
                 metadata: json!({
                     "percentage": format!("{:.2}", percentage),
                     "min_price": format!("{:.2}", min_price),

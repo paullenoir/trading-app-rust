@@ -77,7 +77,8 @@ pub async fn get_stocks_with_strategies(db: web::Data<DatabaseConnection>) -> Ht
                             strategy_id: result.strategy_id,
                             strategy_name: strategies_map.get(&result.strategy_id).cloned(),
                             date: result.date,
-                            recommendation: result.recommendation,
+                            // Convertir serde_json::Value en String pour le frontend
+                            recommendation: result.recommendation.map(|v| v.to_string()),
                         })
                         .collect();
 
@@ -103,6 +104,6 @@ pub fn stocks_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(
         web::scope("/stocks")
             .service(get_stocks)
-            . service(get_stocks_with_strategies)
+            .service(get_stocks_with_strategies)
     );
 }

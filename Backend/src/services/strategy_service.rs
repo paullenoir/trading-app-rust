@@ -1,7 +1,7 @@
 /*
 services/
 ├─ strategy_service.rs
-│  ├─ execute_default_strategies()     ← ADMIN, 4 stratégies hardcodées
+│  ├─ execute_default_strategies()     ← ADMIN, 5 stratégies hardcodées
 │  └─ execute_custom_strategy()        ← USER, parse JSON DSL (futur)
 │
 └─ strategies/
@@ -11,7 +11,8 @@ services/
    │  ├─ min_max_last_year.rs
    │  ├─ rsi.rs
    │  ├─ stochastic.rs
-   │  └─ ema_triple_crossover.rs
+   │  ├─ ema.rs
+   │  └─ point_pivot.rs
    │
    └─ custom/                           ← Interpréteur JSON DSL (futur)
       ├─ mod.rs
@@ -22,9 +23,19 @@ use chrono::Local;
 
 use crate::services::strategies::{
     strategy_trait::{StrategyCalculator, Recommendation},
-    defaults::min_max_last_year::MinMaxLastYear,
+    defaults::{
+        min_max_last_year::MinMaxLastYear,
+        rsi::RSIStrategy,
+        stochastic::StochasticStrategy,
+        ema::EMAStrategy,
+        point_pivot::PointPivotStrategy,
+    },
 };
-use crate::models::strategy_result::{self, Entity as StrategyResult};
+use crate::services::indicator_service::IndicatorService;
+use crate::models::{
+    strategy_result::{self, Entity as StrategyResult},
+    stock::Entity as Stock,
+};
 
 pub struct StrategyService;
 
@@ -38,27 +49,101 @@ impl StrategyService {
     // FLOW 1: ADMIN - Stratégies par défaut hardcodées
     pub async fn execute_default_strategies(
         &self,
-        symbols: Vec<String>,
         db: &DatabaseConnection,
     ) -> Result<Vec<Recommendation>, String> {
+        println!("🚀 Starting strategy execution");
+
+        // 1. Récupérer tous les symboles
+        let stocks = Stock::find()
+            .all(db)
+            .await
+            .map_err(|e| format!("Failed to fetch stocks: {}", e))?;
+
+        let symbols: Vec<String> = stocks
+            .into_iter()
+            .filter_map(|s| s.symbol_alphavantage)
+            .collect();
+
+        //test 1 symbol
+        //let symbols: Vec<String> = vec!["AAPL".to_string()];
+
+        println!("📊 Found {} symbols", symbols.len());
+
+        // 2. Calculer les indicateurs (RSI, EMA, Stochastic, point_pivot)
+        let indicator_service = IndicatorService::new();
+        indicator_service.calculate_all_indicators(symbols.clone(), db).await?;
+
+        println!("✅ Indicators calculated");
+
+        // 3. Exécuter les stratégies
         let mut all_results = Vec::new();
 
-        // MinMaxLastYear avec query batch optimisée
-        let calculator = MinMaxLastYear;
-        let recommendations = calculator.calculate_batch(&symbols, db).await?;
+        // ============================================================================
+        // STRATÉGIE 1 : MinMaxLastYear (strategy_id = 1)
+        // ============================================================================
+        println!("📊 Executing MinMaxLastYear strategy...");
+        let min_max_calc = MinMaxLastYear;
+        let min_max_recs = min_max_calc.calculate_batch(&symbols, db).await?;
+        println!("✅ Calculated {} recommendations for MinMaxLastYear", min_max_recs.len());
 
-        println!("✅ Calculated {} recommendations for MinMaxLastYear", recommendations.len());
-
-        // Sauvegarder tous les résultats
-        for rec in recommendations {
+        for rec in min_max_recs {
             save_result(1, &rec.symbol, &rec, db).await?;
             all_results.push(rec);
         }
 
-        // TODO: Ajouter les autres stratégies (RSI, Stochastic, EMA)
-        // let rsi_calc = RSIStrategy;
-        // let rsi_recs = rsi_calc.calculate_batch(&symbols, db).await?;
-        // for rec in rsi_recs { save_result(3, &rec.symbol, &rec, db).await?; }
+        // ============================================================================
+        // STRATÉGIE 2 : RSI (strategy_id = 2)
+        // ============================================================================
+        println!("📊 Executing RSI strategy...");
+        let rsi_calc = RSIStrategy;
+        let rsi_recs = rsi_calc.calculate_batch(&symbols, db).await?;
+        println!("✅ Calculated {} recommendations for RSI", rsi_recs.len());
+
+        for rec in rsi_recs {
+            save_result(2, &rec.symbol, &rec, db).await?;
+            all_results.push(rec);
+        }
+
+        // ============================================================================
+        // STRATÉGIE 3 : Stochastic (strategy_id = 3)
+        // ============================================================================
+        println!("📊 Executing Stochastic strategy...");
+        let stoch_calc = StochasticStrategy;
+        let stoch_recs = stoch_calc.calculate_batch(&symbols, db).await?;
+        println!("✅ Calculated {} recommendations for Stochastic", stoch_recs.len());
+
+        for rec in stoch_recs {
+            save_result(3, &rec.symbol, &rec, db).await?;
+            all_results.push(rec);
+        }
+
+        // ============================================================================
+        // STRATÉGIE 4 : EMA (strategy_id = 4)
+        // ============================================================================
+        println!("📊 Executing EMA strategy...");
+        let ema_calc = EMAStrategy;
+        let ema_recs = ema_calc.calculate_batch(&symbols, db).await?;
+        println!("✅ Calculated {} recommendations for EMA", ema_recs.len());
+
+        for rec in ema_recs {
+            save_result(4, &rec.symbol, &rec, db).await?;
+            all_results.push(rec);
+        }
+
+        // ============================================================================
+        // STRATÉGIE 5 : Point Pivot (strategy_id = 5)
+        // ============================================================================
+        println!("📊 Executing Point Pivot strategy...");
+        let pivot_calc = PointPivotStrategy;
+        let pivot_recs = pivot_calc.calculate_batch(&symbols, db).await?;
+        println!("✅ Calculated {} recommendations for Point Pivot", pivot_recs.len());
+
+        for rec in pivot_recs {
+            save_result(5, &rec.symbol, &rec, db).await?;
+            all_results.push(rec);
+        }
+
+        println!("✅ Strategy execution completed: {} total recommendations", all_results.len());
 
         Ok(all_results)
     }
@@ -75,7 +160,7 @@ impl StrategyService {
     }
 }
 
-// Fonction helper pour sauvegarder un résultat dans strategy_results
+// Fonction helper pour sauvegarder un résultat dans strategy_results_test
 async fn save_result(
     strategy_id: i32,
     symbol: &str,
@@ -88,7 +173,6 @@ async fn save_result(
     let existing = StrategyResult::find()
         .filter(strategy_result::Column::StrategyId.eq(strategy_id))
         .filter(strategy_result::Column::Symbol.eq(symbol))
-        //.filter(strategy_result::Column::Date.eq(&today))
         .one(db)
         .await
         .map_err(|e| format!("Failed to query existing result: {}", e))?;

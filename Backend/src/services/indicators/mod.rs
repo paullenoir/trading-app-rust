@@ -1,4 +1,3 @@
-pub mod min_max_last_year;
 pub mod rsi;
 pub mod stochastic;
 pub mod ema;

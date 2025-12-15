@@ -5,16 +5,16 @@ use serde_json::json;
 use crate::services::strategies::strategy_trait::{StrategyCalculator, Recommendation};
 use crate::models::indicator::{Entity as Indicator, Column as IndicatorColumn};
 
-pub struct RSIStrategy;
+pub struct StochasticStrategy;
 
 #[async_trait]
-impl StrategyCalculator for RSIStrategy {
+impl StrategyCalculator for StochasticStrategy {
     async fn calculate_batch(
         &self,
         symbols: &[String],
         db: &DatabaseConnection,
     ) -> Result<Vec<Recommendation>, String> {
-        println!("🔄 RSI Strategy: Processing {} symbols", symbols.len());
+        println!("🔄 Stochastic Strategy: Processing {} symbols", symbols.len());
 
         let mut recommendations = Vec::new();
 
@@ -29,14 +29,14 @@ impl StrategyCalculator for RSIStrategy {
                 .map_err(|e| format!("Failed to fetch indicator for {}: {}", symbol, e))?;
 
             if let Some(indicator) = latest_indicator {
-                // Vérifier si RSI existe
-                if let Some(rsi_str) = &indicator.rsi25 {
-                    // Parser RSI
-                    if let Ok(rsi_value) = rsi_str.parse::<f64>() {
+                // Vérifier si Stochastic existe
+                if let Some(stoch_str) = &indicator.stochastic14_7_7 {
+                    // Parser Stochastic
+                    if let Ok(stoch_value) = stoch_str.parse::<f64>() {
                         // Appliquer la logique de stratégie
-                        let signal = if rsi_value <= 30.0 {
+                        let signal = if stoch_value <= 20.0 {
                             "BUY"
-                        } else if rsi_value >= 70.0 {
+                        } else if stoch_value >= 80.0 {
                             "SELL"
                         } else {
                             "HOLD"
@@ -47,7 +47,7 @@ impl StrategyCalculator for RSIStrategy {
                             symbol: symbol.clone(),
                             recommendation: json!(signal),
                             metadata: json!({
-                                "rsi25": rsi_value,
+                                "stochastic14_7_7": stoch_value,
                                 "date": indicator.date,
                                 "signal_type": signal,
                             }),
@@ -59,7 +59,7 @@ impl StrategyCalculator for RSIStrategy {
             }
         }
 
-        println!("✅ RSI Strategy: Generated {} recommendations", recommendations.len());
+        println!("✅ Stochastic Strategy: Generated {} recommendations", recommendations.len());
         Ok(recommendations)
     }
 }

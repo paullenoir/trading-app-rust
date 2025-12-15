@@ -9,7 +9,7 @@ pub struct Model {
     pub strategy_id: i32,
     pub symbol: Option<String>,
     pub date: Option<String>,
-    pub recommendation: Option<String>,
+    pub recommendation: Option<serde_json::Value>,
     pub metadata: Option<serde_json::Value>,
 }
 
