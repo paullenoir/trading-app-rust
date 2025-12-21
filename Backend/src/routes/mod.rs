@@ -32,11 +32,41 @@ AUTH:
                                               Body: {"current_password": "...", "new_password": "..."}
                                               Response: {"success": true, "message": "Password changed successfully"}
 
-TODO - WALLET (à venir):
-  POST /api/wallet/deposit                  - Ajouter de l'argent au wallet
-  POST /api/wallet/withdraw                 - Retirer de l'argent du wallet
-  GET  /api/wallet/history                  - Voir l'historique du wallet
-  GET  /api/wallet/balance                  - Voir les soldes (CAD, USD, EUR)
+WALLET:
+  POST /api/wallet/transaction              - Ajouter une transaction au wallet (protégée)
+                                              Header: Authorization: Bearer <token>
+                                              Body: {
+                                                "date": "2025-12-20",
+                                                "action": "ajout|retrait|gain|perte",
+                                                "symbol": "AAPL" (optionnel, null pour ajout/retrait),
+                                                "amount": 100.50,
+                                                "currency": "CAD|USD|EUR"
+                                              }
+                                              Response: {"success": true, "message": "Transaction added successfully", "transaction": {...}}
+
+  GET  /api/wallet/history                  - Voir l'historique des transactions (protégée)
+                                              Header: Authorization: Bearer <token>
+                                              Response: [
+                                                {
+                                                  "id": 1,
+                                                  "date": "2025-12-20",
+                                                  "action": "ajout",
+                                                  "symbol": null,
+                                                  "amount": 1000.0,
+                                                  "currency": "CAD"
+                                                }
+                                              ]
+
+  GET  /api/wallet/balance                  - Voir les soldes et trésorerie par devise (protégée)
+                                              Header: Authorization: Bearer <token>
+                                              Response: [
+                                                {
+                                                  "currency": "CAD",
+                                                  "total": 2500.50,      // Total wallet (ajouts + gains - retraits - pertes)
+                                                  "invested": 1800.00,   // Montant investi dans les trades en cours
+                                                  "treasury": 700.50     // Trésorerie disponible (total - invested)
+                                                }
+                                              ]
 
 TODO - TRADES (à venir):
   POST /api/trades                          - Acheter une action (créer trade ouvert)
@@ -51,6 +81,7 @@ pub mod health;
 pub mod stocks;
 pub mod admin;
 pub mod auth;
+pub mod wallet;
 use actix_web::web;
 
 pub fn configure_routes(cfg: &mut web::ServiceConfig) {
@@ -60,5 +91,6 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
             .configure(stocks::stocks_routes)
             .configure(admin::admin_routes)
             .configure(auth::auth_routes)
+            .configure(wallet::wallet_routes)
     );
 }
