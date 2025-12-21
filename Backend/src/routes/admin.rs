@@ -25,9 +25,11 @@ use actix_web::{post, web, HttpResponse};
 use sea_orm::{DatabaseConnection, EntityTrait};
 use crate::services::strategy_service::StrategyService;
 use crate::models::stock::Entity as Stock;
+use crate::middleware::AuthUser;  // ← AJOUTE CETTE LIGNE
 
 #[post("/calculate")]
 pub async fn calculate_strategies(
+    _auth_user: AuthUser,  // ← AJOUTE CE PARAMÈTRE (protège la route)
     db: web::Data<DatabaseConnection>,
 ) -> HttpResponse {
     // 1. Récupérer tous les symboles depuis la table stock

@@ -2,7 +2,8 @@ mod models;
 mod routes;
 mod db;
 mod services;
-
+mod utils;
+mod middleware;
 use actix_web::{App, HttpServer, web};
 
 #[actix_web::main]

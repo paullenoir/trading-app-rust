@@ -7,9 +7,13 @@ use crate::models::{
 };
 use sea_orm::{DatabaseConnection, EntityTrait, QueryFilter, ColumnTrait, QueryOrder};
 use std::collections::{HashSet, HashMap};
+use crate::middleware::AuthUser;
 
 #[get("")]
-pub async fn get_stocks(db_connection: web::Data<DatabaseConnection>) -> HttpResponse {
+pub async fn get_stocks(
+    _auth_user: AuthUser,
+    db_connection: web::Data<DatabaseConnection>
+) -> HttpResponse {
     let stocks = Stock::find()
         .all(db_connection.get_ref())
         .await;
@@ -21,7 +25,10 @@ pub async fn get_stocks(db_connection: web::Data<DatabaseConnection>) -> HttpRes
 }
 
 #[get("/with-strategies")]
-pub async fn get_stocks_with_strategies(db: web::Data<DatabaseConnection>) -> HttpResponse {
+pub async fn get_stocks_with_strategies(
+    _auth_user: AuthUser,
+    db: web::Data<DatabaseConnection>
+) -> HttpResponse {
     // 1. Trouver la date la plus récente
     let latest_date = StrategyResult::find()
         .order_by_desc(strategy_result::Column::Date)
@@ -77,7 +84,6 @@ pub async fn get_stocks_with_strategies(db: web::Data<DatabaseConnection>) -> Ht
                             strategy_id: result.strategy_id,
                             strategy_name: strategies_map.get(&result.strategy_id).cloned(),
                             date: result.date,
-                            // Convertir serde_json::Value en String pour le frontend
                             recommendation: result.recommendation.map(|v| v.to_string()),
                         })
                         .collect();
@@ -98,7 +104,6 @@ pub async fn get_stocks_with_strategies(db: web::Data<DatabaseConnection>) -> Ht
         Err(e) => HttpResponse::InternalServerError().json(format!("Error: {}", e)),
     }
 }
-
 
 pub fn stocks_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(

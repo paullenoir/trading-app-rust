@@ -47,7 +47,7 @@ impl StochasticCalculator {
                     // Window pour min/max (14 périodes)
                     let window_minmax = &data[i - self.k_period + 1..=i];
 
-                    if let Some(fast_k) = self.compute_fast_k(window_minmax) {
+                    if self.compute_fast_k(window_minmax).is_some() {
                         // Window pour moyenne mobile du %K (7 périodes)
                         if i >= self.k_period + self.k_slowing - 2 {
                             let mut fast_k_values = Vec::new();

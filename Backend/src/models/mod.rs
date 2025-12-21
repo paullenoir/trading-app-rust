@@ -5,3 +5,7 @@ pub mod strategy_result;
 pub mod historic_data;
 pub mod indicator;
 pub mod dto;
+pub mod users;
+pub mod wallet;
+pub mod trade;
+pub mod trades_fermes;
