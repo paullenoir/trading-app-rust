@@ -4,8 +4,8 @@ use sea_orm::entity::prelude::*;
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize)]
 #[sea_orm(table_name = "trades_fermes")]
 pub struct Model {
-    #[sea_orm(primary_key)]
-    pub id: i32,
+    #[sea_orm(primary_key, auto_increment = false)]
+    pub id: String,
     pub user_id: i32,
     pub symbol: Option<String>,
     pub date_achat: Option<String>,
@@ -15,6 +15,8 @@ pub struct Model {
     pub pourcentage_gain: Option<i32>,
     pub gain_dollars: Option<Decimal>,
     pub temps_jours: Option<i32>,
+    pub trade_achat_id: Option<i32>,
+    pub trade_vente_id: Option<i32>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

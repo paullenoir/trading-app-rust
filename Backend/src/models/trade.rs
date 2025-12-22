@@ -11,7 +11,7 @@ pub struct Model {
     pub symbol: Option<String>,
     #[serde(rename = "type")]
     #[sea_orm(column_name = "type")]
-    pub trade_type: Option<String>,    // "BUY" ou "SELL"
+    pub trade_type: Option<String>,
     pub quantite: Option<Decimal>,
     pub prix_unitaire: Option<Decimal>,
     pub prix_total: Option<Decimal>,
