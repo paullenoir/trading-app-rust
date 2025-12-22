@@ -15,6 +15,16 @@ pub struct Model {
     pub quantite: Option<Decimal>,
     pub prix_unitaire: Option<Decimal>,
     pub prix_total: Option<Decimal>,
+
+    // NOUVEAU: quantite_restante pour tracking FIFO
+    // Pour les achats: quantité encore disponible pour fermeture
+    // Pour les ventes: toujours 0 (les ventes sont consommées immédiatement)
+    //
+    // Exemple:
+    // - Achat 100 AAPL → quantite=100, quantite_restante=100
+    // - Vente 30 AAPL  → Le trade d'achat devient: quantite=100, quantite_restante=70
+    // - Vente 70 AAPL  → Le trade d'achat devient: quantite=100, quantite_restante=0
+    pub quantite_restante: Decimal,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
