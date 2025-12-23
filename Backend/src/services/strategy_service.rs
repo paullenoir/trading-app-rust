@@ -64,9 +64,6 @@ impl StrategyService {
             .filter_map(|s| s.symbol_alphavantage)
             .collect();
 
-        //test 1 symbol
-        //let symbols: Vec<String> = vec!["AAPL".to_string()];
-
         println!("📊 Found {} symbols", symbols.len());
 
         // 2. Calculer les indicateurs (RSI, EMA, Stochastic, point_pivot)
@@ -92,33 +89,7 @@ impl StrategyService {
         }
 
         // ============================================================================
-        // STRATÉGIE 2 : RSI (strategy_id = 2)
-        // ============================================================================
-        println!("📊 Executing RSI strategy...");
-        let rsi_calc = RSIStrategy;
-        let rsi_recs = rsi_calc.calculate_batch(&symbols, db).await?;
-        println!("✅ Calculated {} recommendations for RSI", rsi_recs.len());
-
-        for rec in rsi_recs {
-            save_result(2, &rec.symbol, &rec, db).await?;
-            all_results.push(rec);
-        }
-
-        // ============================================================================
-        // STRATÉGIE 3 : Stochastic (strategy_id = 3)
-        // ============================================================================
-        println!("📊 Executing Stochastic strategy...");
-        let stoch_calc = StochasticStrategy;
-        let stoch_recs = stoch_calc.calculate_batch(&symbols, db).await?;
-        println!("✅ Calculated {} recommendations for Stochastic", stoch_recs.len());
-
-        for rec in stoch_recs {
-            save_result(3, &rec.symbol, &rec, db).await?;
-            all_results.push(rec);
-        }
-
-        // ============================================================================
-        // STRATÉGIE 4 : EMA (strategy_id = 4)
+        // STRATÉGIE 2 : EMA (strategy_id = 2) ← CORRECTION ICI
         // ============================================================================
         println!("📊 Executing EMA strategy...");
         let ema_calc = EMAStrategy;
@@ -126,7 +97,33 @@ impl StrategyService {
         println!("✅ Calculated {} recommendations for EMA", ema_recs.len());
 
         for rec in ema_recs {
-            save_result(4, &rec.symbol, &rec, db).await?;
+            save_result(2, &rec.symbol, &rec, db).await?;  // ← CHANGÉ DE 4 À 2
+            all_results.push(rec);
+        }
+
+        // ============================================================================
+        // STRATÉGIE 3 : RSI (strategy_id = 3) ← CORRECTION ICI
+        // ============================================================================
+        println!("📊 Executing RSI strategy...");
+        let rsi_calc = RSIStrategy;
+        let rsi_recs = rsi_calc.calculate_batch(&symbols, db).await?;
+        println!("✅ Calculated {} recommendations for RSI", rsi_recs.len());
+
+        for rec in rsi_recs {
+            save_result(3, &rec.symbol, &rec, db).await?;  // ← CHANGÉ DE 2 À 3
+            all_results.push(rec);
+        }
+
+        // ============================================================================
+        // STRATÉGIE 4 : Stochastic (strategy_id = 4) ← CORRECTION ICI
+        // ============================================================================
+        println!("📊 Executing Stochastic strategy...");
+        let stoch_calc = StochasticStrategy;
+        let stoch_recs = stoch_calc.calculate_batch(&symbols, db).await?;
+        println!("✅ Calculated {} recommendations for Stochastic", stoch_recs.len());
+
+        for rec in stoch_recs {
+            save_result(4, &rec.symbol, &rec, db).await?;  // ← CHANGÉ DE 3 À 4
             all_results.push(rec);
         }
 
@@ -149,6 +146,7 @@ impl StrategyService {
     }
 
     // FLOW 2: USER - Stratégies custom via JSON DSL (futur)
+    #[allow(dead_code)]
     pub async fn execute_custom_strategy(
         &self,
         _strategy_id: i32,

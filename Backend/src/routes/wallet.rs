@@ -5,7 +5,6 @@ use rust_decimal::Decimal;
 
 use crate::models::wallet::{Entity as Wallet, Column as WalletColumn, ActiveModel as WalletActiveModel};
 use crate::models::trade::{Entity as Trade, Column as TradeColumn};
-use crate::models::stock::{Entity as Stock, Column as StockColumn};  // ← Garde celui-ci
 use crate::middleware::AuthUser;
 
 // DTO pour ajouter une transaction

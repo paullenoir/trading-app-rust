@@ -165,51 +165,63 @@ pub async fn get_open_positions_with_recommendations(
                     continue;
                 }
 
-                let latest_results = strategy_result::Entity::find()
-                    .filter(strategy_result::Column::Symbol.eq(&symbol))
-                    .order_by_desc(strategy_result::Column::Date)
-                    .limit(1)
+                let all_strategies = strategy::Entity::find()
                     .all(db.get_ref())
                     .await;
 
-                let strategies = match latest_results {
-                    Ok(results) => {
-                        if results.is_empty() {
-                            vec![]
-                        } else {
-                            let latest_date = results[0].date.clone();
+                let strategies = match all_strategies {
+                    Ok(strats) => {
+                        let mut strategy_list = Vec::new();
 
-                            let all_latest = strategy_result::Entity::find()
+                        for strat in strats {
+                            let latest_result = strategy_result::Entity::find()
+                                .filter(strategy_result::Column::StrategyId.eq(strat.id))
                                 .filter(strategy_result::Column::Symbol.eq(&symbol))
-                                .filter(strategy_result::Column::Date.eq(latest_date))
-                                .all(db.get_ref())
+                                .order_by_desc(strategy_result::Column::Date)
+                                .limit(1)
+                                .one(db.get_ref())
                                 .await;
 
-                            match all_latest {
-                                Ok(strats) => {
-                                    let mut strategy_list = Vec::new();
-                                    for sr in strats {
-                                        let strat = strategy::Entity::find_by_id(sr.strategy_id)
-                                            .one(db.get_ref())
-                                            .await;
-
-                                        if let Ok(Some(s)) = strat {
-                                            let recommendation_str = sr.recommendation
-                                                .and_then(|v| v.as_str().map(|s| s.to_string()));
-
-                                            strategy_list.push(StrategyWithResult {
-                                                strategy_id: s.id,
-                                                strategy_name: s.name,
-                                                date: sr.date,
-                                                recommendation: recommendation_str,
-                                            });
-                                        }
+                            if let Ok(Some(sr)) = latest_result {
+                                // CORRECTION: Gérer à la fois les strings et les arrays JSON sans backslashes
+                                let recommendation_str = sr.recommendation.and_then(|v| {
+                                    // Cas 1: Si c'est une string simple ("HOLD", "BUY", "SELL")
+                                    if let Some(s) = v.as_str() {
+                                        return Some(s.to_string());
                                     }
-                                    strategy_list
-                                }
-                                Err(_) => vec![],
+
+                                    // Cas 2: Si c'est un array JSON (["BUY", "BUY", "N/A"])
+                                    if let Some(arr) = v.as_array() {
+                                        // Convertir chaque élément en string et reformater proprement
+                                        let items: Vec<String> = arr
+                                            .iter()
+                                            .filter_map(|item| {
+                                                if let Some(s) = item.as_str() {
+                                                    Some(s.to_string())
+                                                } else {
+                                                    Some(item.to_string())
+                                                }
+                                            })
+                                            .collect();
+
+                                        // Formatter comme: ["BUY", "BUY", "N/A"]
+                                        return Some(format!("[{}]", items.join(", ")));
+                                    }
+
+                                    // Cas 3: Autre type JSON (objet, nombre, etc.)
+                                    Some(v.to_string())
+                                });
+
+                                strategy_list.push(StrategyWithResult {
+                                    strategy_id: strat.id,
+                                    strategy_name: strat.name,
+                                    date: sr.date,
+                                    recommendation: recommendation_str,
+                                });
                             }
                         }
+
+                        strategy_list
                     }
                     Err(_) => vec![],
                 };

@@ -1,16 +1,38 @@
 /*
-voici un zip provenant de mon github pour mon projet app de trading.
-il y a 2 volet back end et front end.
-pour le moment je te demande que analyser la partie backend end rust.
-le but de cette version 1 du backend est d'obtenir pour un user les trades en cours
-avec les recommandation de strategie, toutes les info sur son wallet, les trades_fermes donc les trades cloture
-et les recommandation des startegie par defaut pour tous les symbol.
-dans la version 2 je ferais en sorte que les users puisse utliser leur chatGPT connecte a
-un serveur MCP que jaurai fait afin de créé un startegie dont la logique sera stocke en BD
-et le user pourra la tester sur 15 symbols et ensuite l'utiliser pour ses 15 symbols.
-le user pourra avoir un maximum de 10 strategies pour un maximum de 150 symbols.
-dans la version 3 je ferai en sorte que le user puisse cree une IA et faire du trade automatique
-avec interactive brocker
+============================================================================
+VISION DU PROJET - APPLICATION DE TRADING EN 3 VERSIONS
+============================================================================
+
+VERSION 1 - FONDATIONS & SUIVI MANUEL (ACTUELLE)
+-------------------------------------------------
+Plateforme de suivi de trades avec authentification JWT sécurisée et gestion
+de wallet multi-devises (CAD/USD/EUR). Le système calcule automatiquement les
+positions ouvertes en FIFO, les trades clôturés avec gains/pertes, et fournit
+des recommandations quotidiennes via 5 stratégies par défaut (RSI, Stochastic,
+EMA, Point Pivot, MinMaxLastYear) pour l'ensemble des symboles. Architecture
+Rust/Actix-Web/SeaORM optimisée pour traiter 2000+ symboles en batch.
+
+VERSION 2 - STRATÉGIES PERSONNALISÉES VIA CHATGPT + MCP
+--------------------------------------------------------
+Permet aux utilisateurs de créer leurs propres stratégies de trading sans coder,
+via une conversation avec ChatGPT connecté à un serveur MCP. L'utilisateur décrit
+sa stratégie en langage naturel, ChatGPT génère un DSL JSON qui encode la logique,
+et le backend l'exécute de manière sécurisée. Limites: max 10 stratégies par user,
+15 symboles par stratégie (150 symboles total). Inclut un mode backtesting pour
+valider les stratégies sur données historiques avant activation.
+
+VERSION 3 - TRADING AUTOMATIQUE AVEC INTERACTIVE BROKERS
+---------------------------------------------------------
+Automatisation complète du trading avec exécution temps réel via Interactive Brokers.
+Chaque utilisateur peut créer un "agent trader IA" qui analyse continuellement les
+marchés selon ses stratégies personnalisées et exécute automatiquement les ordres.
+Gestion des risques critique: stop-loss/take-profit automatiques, limites de position,
+perte max journalière, circuit breaker. Sécurité renforcée: 2FA obligatoire,
+chiffrement credentials IB, alertes email/SMS pour chaque ordre, monitoring 24/7
+avec bouton d'arrêt d'urgence. Modes: paper trading (simulation), dry-run (analyse
+seule), et live trading (exécution réelle).
+
+============================================================================
 */
 
 mod models;

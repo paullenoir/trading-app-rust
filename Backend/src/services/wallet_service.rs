@@ -7,6 +7,7 @@ pub struct WalletService;
 
 /// Représente la balance pour une devise spécifique
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct CurrencyBalance {
     pub currency: String,
     pub total: Decimal,        // Total du wallet (ajouts + gains - pertes - retraits)

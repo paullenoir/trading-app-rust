@@ -4,7 +4,7 @@ use std::collections::HashMap;
 pub struct StochasticCalculator {
     k_period: usize,      // 14 pour le min/max
     k_slowing: usize,     // 7 pour la moyenne du %K
-    d_period: usize,      // 7 pour la moyenne du %D (non utilisé ici)
+    _d_period: usize,      // 7 pour la moyenne du %D (non utilisé ici)
 }
 
 impl StochasticCalculator {
@@ -12,7 +12,7 @@ impl StochasticCalculator {
         Self {
             k_period,
             k_slowing,
-            d_period,
+            _d_period: d_period,
         }
     }
 

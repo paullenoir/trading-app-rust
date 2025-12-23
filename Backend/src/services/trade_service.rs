@@ -189,6 +189,7 @@ impl TradeService {
     }
 
     /// Vérifie si l'utilisateur possède assez de quantité d'un symbole pour vendre
+    #[allow(dead_code)]
     pub async fn get_available_quantity(
         db: &DatabaseConnection,
         user_id: i32,

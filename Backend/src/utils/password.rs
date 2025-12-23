@@ -18,7 +18,8 @@ pub fn hash_password(password: &str) -> Result<String, String> {
 
     // Calculer le hash PBKDF2
     let mut key = [0u8; KEY_LENGTH];
-    pbkdf2::<HmacSha256>(password.as_bytes(), &salt, ITERATIONS, &mut key);
+    pbkdf2::<HmacSha256>(password.as_bytes(), &salt, ITERATIONS, &mut key)
+        .expect("PBKDF2 hash generation failed");
 
     // Encoder en base64 URL-safe sans padding (format Werkzeug moderne)
     let salt_b64 = URL_SAFE_NO_PAD.encode(salt);
@@ -57,7 +58,8 @@ pub fn verify_password(password: &str, stored_hash: &str) -> Result<bool, String
 
     // Calculer le hash avec le même salt et iterations
     let mut computed = vec![0u8; expected_hash.len()];
-    pbkdf2::<HmacSha256>(password.as_bytes(), &salt, iterations, &mut computed);
+    pbkdf2::<HmacSha256>(password.as_bytes(), &salt, iterations, &mut computed)
+        .expect("PBKDF2 hash verification failed");
 
     // Comparer les hashs (constant-time pour éviter timing attacks)
     Ok(computed == expected_hash)
