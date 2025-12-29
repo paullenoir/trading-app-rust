@@ -9,3 +9,4 @@ pub mod users;
 pub mod wallet;
 pub mod trade;
 pub mod trades_fermes;
+pub mod abonnement;

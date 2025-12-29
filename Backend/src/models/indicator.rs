@@ -2,7 +2,7 @@ use serde::Serialize;
 use sea_orm::entity::prelude::*;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize)]
-#[sea_orm(table_name = "indicators_test")]
+#[sea_orm(table_name = "indicators_rust")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub date: String,
