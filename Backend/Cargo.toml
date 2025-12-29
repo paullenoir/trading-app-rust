@@ -23,6 +23,8 @@ base64 = "0.22" # Pour encoder/décoder le salt et hash
 sha2 = "0.10" #Pour PBKDF2-HMAC-SHA256
 hmac = "0.12"
 hex = "0.4"
+uuid = { version = "1.11", features = ["v4", "serde"] } # Pour générer les tokens de reset/verification
+reqwest = { version = "0.12", features = ["json"] } # Pour valider les tokens Google
 
 #wallet
 futures = "0.3"
