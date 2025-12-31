@@ -67,11 +67,15 @@ pub struct OpenPositionResponse {
     pub prix_moyen: Decimal,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Serialize)]
 pub struct OpenPositionWithRecommendationsResponse {
     pub symbol: String,
     pub quantite_totale: Decimal,
     pub prix_moyen: Decimal,
+    pub current_price: Option<Decimal>,
+    pub pnl_dollars: Option<Decimal>,
+    pub pnl_percentage: Option<f64>,
+    pub entry_date: Option<String>,
     pub strategies: Vec<StrategyWithResult>,
 }
 

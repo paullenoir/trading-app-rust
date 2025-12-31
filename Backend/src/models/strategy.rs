@@ -8,7 +8,7 @@ pub struct Model {
     pub id: i32,
     pub name: Option<String>,
     pub created_by: Option<String>,
-    pub shared_with: Option<Vec<String>>,
+    pub shared_with: Option<String>,
     pub is_public: Option<bool>,
     pub strategy_config: Option<serde_json::Value>,  // Pour le JSONB
     pub created_at: Option<chrono::NaiveDateTime>,
