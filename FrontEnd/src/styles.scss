@@ -1,0 +1,40 @@
+// Custom theming for Angular Material
+@use '@angular/material' as mat;
+
+@include mat.core();
+
+// Thème dark avec palettes Material prédéfinies
+$neural-theme: mat.define-theme((
+  color: (
+    theme-type: dark,
+    primary: mat.$cyan-palette,
+    tertiary: mat.$magenta-palette,
+  ),
+  typography: (
+    plain-family: Roboto,
+  ),
+  density: (
+    scale: 0,
+  ),
+));
+
+// Application du thème
+html {
+  @include mat.all-component-themes($neural-theme);
+}
+
+// Styles de base
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  margin: 0;
+}
