@@ -1,0 +1,216 @@
+<div class="bg-[#0A0B0E] min-h-screen flex flex-col justify-center relative overflow-hidden">
+
+  <!-- ANIMATED BACKGROUND -->
+  <div class="fixed inset-0 -z-10 w-full h-full overflow-hidden pointer-events-none">
+    <div class="animated-gradient absolute inset-0"></div>
+    <div class="cyber-grid absolute inset-0"></div>
+    <div class="absolute inset-0">
+      <div class="orb" style="width:300px;height:300px;background:radial-gradient(circle,rgba(16,185,129,0.3),transparent);top:10%;left:10%;animation-delay:0s"></div>
+      <div class="orb" style="width:400px;height:400px;background:radial-gradient(circle,rgba(6,182,212,0.25),transparent);top:50%;right:10%;animation-delay:3s"></div>
+      <div class="orb" style="width:250px;height:250px;background:radial-gradient(circle,rgba(16,185,129,0.2),transparent);bottom:10%;left:50%;animation-delay:6s"></div>
+    </div>
+    <div class="absolute inset-0">
+      @for (p of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]; track p) {
+        <div class="particle" [style.left]="getParticleLeft(p)" [style.animation-duration]="getParticleDuration(p)" [style.animation-delay]="getParticleDelay(p)"></div>
+      }
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="w-full max-w-5xl mx-auto px-6 py-6 relative z-10">
+
+    <!-- LOGO -->
+    <div class="flex animate-[animationIn_0.8s_ease-out_0.1s_both] mb-6 justify-start">
+      <a class="flex items-center gap-3 group" href="/">
+        <img src="logo.png" alt="Neural Trading" class="h-8 w-auto opacity-90 group-hover:opacity-100 transition-opacity">
+        <span class="text-sm font-medium tracking-tight text-neutral-300 group-hover:text-white transition-colors">Neural<span class="text-teal-400">Trading</span></span>
+      </a>
+    </div>
+
+    <!-- TWO PANEL GRID -->
+    <main class="grid lg:grid-cols-2 gap-8 items-start justify-center">
+
+      <!-- LEFT: SIGN IN -->
+      <div class="flex flex-col items-center w-full animate-[animationIn_0.8s_ease-out_0.2s_both]">
+        <div class="relative w-full max-w-[420px] bg-[#0A0B0E]/80 backdrop-blur-xl border border-white/10 rounded-[1.5rem] overflow-hidden shadow-2xl p-8 group transition-all hover:border-white/20">
+          <div class="absolute inset-0 bg-gradient-to-b from-transparent via-[#0A0B0E]/50 to-[#0A0B0E] pointer-events-none"></div>
+          <div class="relative z-10 flex flex-col gap-6">
+            <!-- Header -->
+            <div>
+              <h1 class="text-xl font-medium tracking-tight text-white mb-2">Sign In</h1>
+              <p class="text-neutral-400 text-xs font-normal">Welcome back to your dashboard.</p>
+            </div>
+
+            <!-- Login Form -->
+            <form class="w-full flex flex-col gap-4" (ngSubmit)="onLogin()">
+              <!-- Email -->
+              <div class="space-y-1.5">
+                <label class="text-[10px] uppercase tracking-wider font-semibold text-neutral-500">Email</label>
+                <div class="relative group/input">
+                  <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-neutral-600 group-focus-within/input:text-teal-400 transition-colors">
+                    <iconify-icon icon="solar:letter-linear" width="18" style="stroke-width:1.5"></iconify-icon>
+                  </div>
+                  <input type="email" [ngModel]="loginEmail()" (ngModelChange)="loginEmail.set($event)" name="loginEmail"
+                    placeholder="name&#64;company.com" autocomplete="email" required
+                    class="w-full bg-[#0A0B0E] border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-sm text-white placeholder-neutral-600 focus:outline-none focus:border-teal-500/50 focus:ring-1 focus:ring-teal-500/50 transition-all shadow-[0_0_0_1px_rgba(255,255,255,0.02)]">
+                </div>
+              </div>
+
+              <!-- Password -->
+              <div class="space-y-1.5">
+                <div class="flex items-center justify-between">
+                  <label class="text-[10px] uppercase tracking-wider font-semibold text-neutral-500">Password</label>
+                  <a href="#" class="text-[10px] text-teal-400/70 hover:text-teal-400 transition-colors font-medium">Forgot?</a>
+                </div>
+                <div class="relative group/input">
+                  <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-neutral-600 group-focus-within/input:text-teal-400 transition-colors">
+                    <iconify-icon icon="solar:lock-password-linear" width="18" style="stroke-width:1.5"></iconify-icon>
+                  </div>
+                  <input [type]="loginShowPassword() ? 'text' : 'password'" [ngModel]="loginPassword()" (ngModelChange)="loginPassword.set($event)" name="loginPassword"
+                    placeholder="••••••••" autocomplete="current-password" required
+                    class="w-full bg-[#0A0B0E] border border-white/10 rounded-xl py-2.5 pl-10 pr-10 text-sm text-white placeholder-neutral-600 focus:outline-none focus:border-teal-500/50 focus:ring-1 focus:ring-teal-500/50 transition-all shadow-[0_0_0_1px_rgba(255,255,255,0.02)]">
+                  <button type="button" (click)="toggleLoginPassword()" class="absolute inset-y-0 right-0 pr-3 flex items-center text-neutral-600 hover:text-neutral-400 transition-colors">
+                    <iconify-icon [icon]="loginShowPassword() ? 'solar:eye-closed-linear' : 'solar:eye-linear'" width="18" style="stroke-width:1.5"></iconify-icon>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Error -->
+              @if (loginError()) {
+                <p class="text-red-400 text-xs">{{ loginError() }}</p>
+              }
+
+              <!-- Submit -->
+              <button type="submit" [disabled]="loginLoading()" class="shiny-cta relative w-full rounded-xl py-2.5 text-white text-xs font-medium border border-transparent transition-transform active:scale-[0.98] disabled:opacity-50">
+                {{ loginLoading() ? 'Signing in...' : 'Log In' }}
+              </button>
+            </form>
+
+            <!-- Divider -->
+            <div class="flex items-center gap-3">
+              <div class="flex-1 border-t border-white/5"></div>
+              <span class="text-neutral-600 text-[10px] font-medium">Or</span>
+              <div class="flex-1 border-t border-white/5"></div>
+            </div>
+
+            <!-- Google -->
+            <button type="button" class="flex w-full items-center justify-center gap-2 bg-white/5 border border-white/10 rounded-xl py-2.5 hover:bg-white/10 hover:border-white/20 transition-all text-xs font-medium text-neutral-300">
+              <iconify-icon icon="logos:google-icon" width="14"></iconify-icon>
+              Google
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: CREATE ACCOUNT -->
+      <div class="flex flex-col items-center w-full animate-[animationIn_0.8s_ease-out_0.4s_both]">
+        <div class="relative w-full max-w-[420px] bg-[#0A0B0E]/80 backdrop-blur-xl border border-white/10 rounded-[1.5rem] overflow-hidden shadow-2xl p-8 group transition-all hover:border-teal-500/30">
+          <div class="absolute -top-24 -right-24 w-48 h-48 bg-teal-500/10 blur-[80px] rounded-full pointer-events-none"></div>
+          <div class="relative z-10 flex flex-col gap-6">
+            <!-- Header -->
+            <div>
+              <h1 class="text-xl font-medium tracking-tight text-white mb-2">Create Account</h1>
+              <p class="text-neutral-400 text-xs font-normal">Start your 14-day free trial today.</p>
+            </div>
+
+            <!-- Signup Form -->
+            <form class="w-full flex flex-col gap-4" (ngSubmit)="onSignup()">
+              <!-- Full Name -->
+              <div class="space-y-1.5">
+                <label class="text-[10px] uppercase tracking-wider font-semibold text-neutral-500">Full Name</label>
+                <div class="relative group/input">
+                  <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-neutral-600 group-focus-within/input:text-teal-400 transition-colors">
+                    <iconify-icon icon="solar:user-linear" width="18" style="stroke-width:1.5"></iconify-icon>
+                  </div>
+                  <input type="text" [ngModel]="signupName()" (ngModelChange)="signupName.set($event)" name="signupName"
+                    placeholder="John Doe" autocomplete="name" required
+                    class="w-full bg-[#0A0B0E] border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-sm text-white placeholder-neutral-600 focus:outline-none focus:border-teal-500/50 focus:ring-1 focus:ring-teal-500/50 transition-all shadow-[0_0_0_1px_rgba(255,255,255,0.02)]">
+                </div>
+              </div>
+
+              <!-- Work Email -->
+              <div class="space-y-1.5">
+                <label class="text-[10px] uppercase tracking-wider font-semibold text-neutral-500">Work Email</label>
+                <div class="relative group/input">
+                  <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-neutral-600 group-focus-within/input:text-teal-400 transition-colors">
+                    <iconify-icon icon="solar:letter-linear" width="18" style="stroke-width:1.5"></iconify-icon>
+                  </div>
+                  <input type="email" [ngModel]="signupEmail()" (ngModelChange)="signupEmail.set($event)" name="signupEmail"
+                    placeholder="name&#64;company.com" autocomplete="email" required
+                    class="w-full bg-[#0A0B0E] border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-sm text-white placeholder-neutral-600 focus:outline-none focus:border-teal-500/50 focus:ring-1 focus:ring-teal-500/50 transition-all shadow-[0_0_0_1px_rgba(255,255,255,0.02)]">
+                </div>
+              </div>
+
+              <!-- Create Password -->
+              <div class="space-y-1.5">
+                <label class="text-[10px] uppercase tracking-wider font-semibold text-neutral-500">Create Password</label>
+                <div class="relative group/input">
+                  <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-neutral-600 group-focus-within/input:text-teal-400 transition-colors">
+                    <iconify-icon icon="solar:lock-password-linear" width="18" style="stroke-width:1.5"></iconify-icon>
+                  </div>
+                  <input [type]="signupShowPassword() ? 'text' : 'password'" [ngModel]="signupPassword()" (ngModelChange)="signupPassword.set($event)" name="signupPassword"
+                    placeholder="Min. 8 characters" minlength="8" autocomplete="new-password" required
+                    class="w-full bg-[#0A0B0E] border border-white/10 rounded-xl py-2.5 pl-10 pr-10 text-sm text-white placeholder-neutral-600 focus:outline-none focus:border-teal-500/50 focus:ring-1 focus:ring-teal-500/50 transition-all shadow-[0_0_0_1px_rgba(255,255,255,0.02)]">
+                  <button type="button" (click)="toggleSignupPassword()" class="absolute inset-y-0 right-0 pr-3 flex items-center text-neutral-600 hover:text-neutral-400 transition-colors">
+                    <iconify-icon [icon]="signupShowPassword() ? 'solar:eye-closed-linear' : 'solar:eye-linear'" width="18" style="stroke-width:1.5"></iconify-icon>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Terms Checkbox -->
+              <label for="terms-checkbox" class="flex items-start gap-3 cursor-pointer group/terms mt-1">
+                <div class="relative flex items-center pt-0.5">
+                  <input type="checkbox" id="terms-checkbox" [ngModel]="signupTerms()" (ngModelChange)="signupTerms.set($event)" name="signupTerms" class="custom-checkbox sr-only">
+                  <div class="w-4 h-4 rounded border border-white/20 bg-white/5 flex items-center justify-center transition-all group-hover/terms:border-white/40" [class.!bg-teal-400]="signupTerms()" [class.!border-teal-400]="signupTerms()">
+                    <svg class="w-2.5 h-2.5 text-black pointer-events-none" [class.hidden]="!signupTerms()" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                  </div>
+                </div>
+                <span class="text-xs text-neutral-500 group-hover/terms:text-neutral-400 transition-colors">I agree to the <a href="#" class="text-teal-400 hover:text-teal-300 underline decoration-teal-500/30 underline-offset-2">Terms</a> and <a href="#" class="text-teal-400 hover:text-teal-300 underline decoration-teal-500/30 underline-offset-2">Privacy Policy</a>.</span>
+              </label>
+
+              <!-- Error / Success -->
+              @if (signupError()) {
+                <p class="text-red-400 text-xs">{{ signupError() }}</p>
+              }
+              @if (signupSuccess()) {
+                <p class="text-teal-400 text-xs">{{ signupSuccess() }}</p>
+              }
+
+              <!-- Submit -->
+              <button type="submit" [disabled]="signupLoading() || !signupTerms()" class="shiny-cta relative w-full rounded-xl px-6 py-3 text-white text-xs font-semibold uppercase tracking-wide border border-transparent transition-transform active:scale-[0.98] disabled:opacity-50">
+                <span class="flex items-center justify-center gap-2">
+                  {{ signupLoading() ? 'Creating...' : 'Create Account' }}
+                  @if (!signupLoading()) {
+                    <iconify-icon icon="solar:arrow-right-linear" width="16" style="stroke-width:2"></iconify-icon>
+                  }
+                </span>
+              </button>
+            </form>
+
+            <!-- Divider -->
+            <div class="flex items-center gap-3">
+              <div class="flex-1 border-t border-white/5"></div>
+              <span class="text-neutral-600 text-[10px] font-medium">Or</span>
+              <div class="flex-1 border-t border-white/5"></div>
+            </div>
+
+            <!-- Google -->
+            <button type="button" class="flex w-full items-center justify-center gap-2 bg-white/5 border border-white/10 rounded-xl py-2.5 hover:bg-white/10 hover:border-white/20 transition-all text-xs font-medium text-neutral-300">
+              <iconify-icon icon="logos:google-icon" width="14"></iconify-icon>
+              Sign up with Google
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="mt-12 flex justify-center gap-6 text-[10px] text-neutral-600 font-medium animate-[animationIn_0.8s_ease-out_0.6s_both]">
+      <a href="#" class="hover:text-neutral-400 transition-colors">Terms</a>
+      <a href="#" class="hover:text-neutral-400 transition-colors">Privacy</a>
+      <a href="#" class="hover:text-neutral-400 transition-colors">Support</a>
+    </footer>
+  </div>
+</div>

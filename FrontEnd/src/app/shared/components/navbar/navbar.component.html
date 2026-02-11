@@ -1,0 +1,43 @@
+<nav class="border-b border-white/10 bg-[#0A0B0E]/80 backdrop-blur-xl sticky top-0 z-50">
+  <div class="max-w-[1600px] mx-auto px-6 py-4">
+    <div class="flex items-center justify-between">
+
+      <!-- Logo -->
+      <a routerLink="/dashboard" class="flex items-center gap-3 group">
+        <img src="logo.png" alt="Neural Trading" class="w-8 h-8 transition-transform group-hover:scale-110 duration-300" style="filter: drop-shadow(0 0 6px rgba(45,212,191,0.5))">
+        <span class="flex items-center gap-3 select-none">
+          <div class="flex flex-col gap-[3px] py-1">
+            <div class="w-1 h-1 rounded-full bg-teal-400 shadow-[0_0_6px_rgba(45,212,191,0.6)]"></div>
+            <div class="w-1 h-1 rounded-full bg-teal-400/60"></div>
+            <div class="w-1 h-1 rounded-full bg-teal-400/30"></div>
+          </div>
+          <div class="flex flex-col">
+            <span class="text-[10px] font-medium tracking-[0.25em] text-teal-400 uppercase leading-none mb-1 font-geist">Neural</span>
+            <div class="relative">
+              <span class="text-base font-semibold tracking-[0.1em] text-white uppercase leading-none font-geist">Trading</span>
+              <div class="absolute -bottom-1.5 left-0 w-full h-[1px] bg-gradient-to-r from-teal-400 to-transparent opacity-80"></div>
+            </div>
+          </div>
+        </span>
+      </a>
+
+      <!-- Nav Links -->
+      <div class="flex items-center gap-8">
+        <a routerLink="/dashboard" routerLinkActive="!text-teal-400 !hover:text-teal-300" class="text-neutral-400 font-medium text-sm hover:text-white transition-colors">Dashboard</a>
+        <a routerLink="/trade" routerLinkActive="!text-teal-400 !hover:text-teal-300" class="text-neutral-400 font-medium text-sm hover:text-white transition-colors">Trade</a>
+        <a routerLink="/chart" routerLinkActive="!text-teal-400 !hover:text-teal-300" class="text-neutral-400 font-medium text-sm hover:text-white transition-colors">Chart</a>
+        <a routerLink="/wallet" routerLinkActive="!text-teal-400 !hover:text-teal-300" class="text-neutral-400 font-medium text-sm hover:text-white transition-colors">Wallet</a>
+      </div>
+
+      <!-- Right Section -->
+      <div class="flex items-center gap-4">
+        <button class="p-2 hover:bg-white/5 rounded-lg transition-colors">
+          <iconify-icon icon="mdi:bell-outline" width="20" class="text-neutral-400"></iconify-icon>
+        </button>
+        <div class="w-8 h-8 bg-gradient-to-br from-teal-400/20 to-teal-500/20 border border-teal-400/30 rounded-full flex items-center justify-center cursor-pointer" (click)="logout()">
+          <span class="text-xs text-teal-400 font-bold">{{ user()?.username?.charAt(0)?.toUpperCase() || 'U' }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>

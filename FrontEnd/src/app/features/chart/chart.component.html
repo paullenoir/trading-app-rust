@@ -1,0 +1,311 @@
+<app-navbar />
+
+<main class="max-w-[1600px] mx-auto px-6 py-8">
+
+  @if (loading()) {
+    <app-loading-skeleton />
+  } @else {
+
+  <!-- Grid: Indicator Values + Consensus -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+
+    <!-- Indicator Values Card -->
+    <div class="dashboard-card p-6 animate-fade-in">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-1 h-6 bg-teal-400 rounded-full"></div>
+        <div>
+          <h2 class="text-lg font-bold text-white font-geist">Indicateurs Techniques</h2>
+          <div class="text-xs text-neutral-500 mt-1">Valeurs en temps réel</div>
+        </div>
+      </div>
+
+      @if (indicators()) {
+        <div class="grid grid-cols-2 lg:grid-cols-3 gap-3">
+          <!-- RSI -->
+          <div class="p-3 bg-white/5 border border-white/10 rounded-lg">
+            <div class="text-xs text-neutral-500 mb-1">RSI</div>
+            <div class="text-sm text-white font-semibold">{{ formatNumber(indicators()!.indicators.rsi) }}</div>
+          </div>
+          <!-- Stochastic K -->
+          <div class="p-3 bg-white/5 border border-white/10 rounded-lg">
+            <div class="text-xs text-neutral-500 mb-1">Stochastic K</div>
+            <div class="text-sm text-white font-semibold">{{ formatNumber(indicators()!.indicators.stochastic_k) }}</div>
+          </div>
+          <!-- EMA 20 -->
+          <div class="p-3 bg-white/5 border border-white/10 rounded-lg">
+            <div class="text-xs text-neutral-500 mb-1">EMA 20</div>
+            <div class="text-sm text-white font-semibold">{{ formatPrice(indicators()!.indicators.ema_20) }}</div>
+          </div>
+          <!-- EMA 50 -->
+          <div class="p-3 bg-white/5 border border-white/10 rounded-lg">
+            <div class="text-xs text-neutral-500 mb-1">EMA 50</div>
+            <div class="text-sm text-white font-semibold">{{ formatPrice(indicators()!.indicators.ema_50) }}</div>
+          </div>
+          <!-- EMA 200 -->
+          <div class="p-3 bg-white/5 border border-white/10 rounded-lg">
+            <div class="text-xs text-neutral-500 mb-1">EMA 200</div>
+            <div class="text-sm text-white font-semibold">{{ formatPrice(indicators()!.indicators.ema_200) }}</div>
+          </div>
+          <!-- Pivot Point -->
+          <div class="p-3 bg-white/5 border border-white/10 rounded-lg">
+            <div class="text-xs text-neutral-500 mb-1">Point Pivot</div>
+            <div class="text-sm text-white font-semibold">{{ formatPrice(indicators()!.indicators.pivot_point) }}</div>
+          </div>
+          <!-- Resistance 1 -->
+          <div class="p-3 bg-white/5 border border-white/10 rounded-lg">
+            <div class="text-xs text-neutral-500 mb-1">R1</div>
+            <div class="text-sm text-rose-500 font-semibold">{{ formatPrice(indicators()!.indicators.resistance_1) }}</div>
+          </div>
+          <!-- Support 1 -->
+          <div class="p-3 bg-white/5 border border-white/10 rounded-lg">
+            <div class="text-xs text-neutral-500 mb-1">S1</div>
+            <div class="text-sm text-emerald-500 font-semibold">{{ formatPrice(indicators()!.indicators.support_1) }}</div>
+          </div>
+        </div>
+      } @else {
+        <app-empty-state icon="mdi:chart-bell-curve-cumulative" title="Aucun indicateur disponible" />
+      }
+    </div>
+
+    <!-- Consensus Final -->
+    <div class="consensus-card animate-fade-in" [class]="consensusClass()">
+      <div class="flex items-center justify-center gap-4 mb-4">
+        <iconify-icon icon="mdi:chart-line-variant" width="32" class="text-emerald-500"></iconify-icon>
+        <h2 class="text-2xl font-bold text-white font-geist">CONSENSUS</h2>
+      </div>
+      <div class="text-6xl font-bold mb-4 font-geist" [class]="consensusColor()">{{ consensusText() }}</div>
+      <div class="text-lg text-neutral-300 mb-4">{{ consensusDescription() }}</div>
+      <div class="flex items-center justify-center gap-6 text-sm">
+        <div class="flex items-center gap-2">
+          <div class="w-3 h-3 bg-emerald-500 rounded-full"></div>
+          <span class="text-neutral-400">BUY: <strong class="text-white">{{ voteCounts().buy }}</strong></span>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="w-3 h-3 bg-neutral-500 rounded-full"></div>
+          <span class="text-neutral-400">NEUTRAL: <strong class="text-white">{{ voteCounts().hold }}</strong></span>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="w-3 h-3 bg-rose-500 rounded-full"></div>
+          <span class="text-neutral-400">SELL: <strong class="text-white">{{ voteCounts().sell }}</strong></span>
+        </div>
+      </div>
+      <div class="mt-6 pt-6 border-t border-emerald-500/20">
+        <div class="text-xs text-neutral-500 uppercase tracking-wide mb-2">Stratégies actives</div>
+        <div class="flex flex-wrap gap-2 justify-center">
+          @for (strategy of strategies(); track strategy.strategy_name) {
+            <span [class]="getStrategyBadgeClass(strategy.recommendation)">{{ strategy.strategy_name }}</span>
+          } @empty {
+            <span class="text-xs text-neutral-500">Aucune stratégie</span>
+          }
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Header Analyse Technique -->
+  <div class="dashboard-card p-6 mb-6 animate-fade-in">
+    <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+      <div class="flex items-center gap-4">
+        <div class="w-1 h-8 bg-teal-400 rounded-full"></div>
+        <div>
+          <div class="text-xs text-neutral-500 uppercase tracking-wide mb-1">ANALYSE TECHNIQUE</div>
+          <h1 class="text-3xl font-bold text-white font-geist">{{ selectedSymbol() }}</h1>
+          <div class="text-sm text-neutral-400 mt-1">{{ currentStockName() }}</div>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-6">
+        <!-- Symbol Selector -->
+        <div>
+          <label class="block text-xs text-neutral-400 mb-2">Symbol</label>
+          <select
+            [ngModel]="selectedSymbol()"
+            (ngModelChange)="selectedSymbol.set($event); onSymbolChange()"
+            class="px-4 py-2 bg-[#0A0B0E] border border-white/10 rounded-lg text-white focus:outline-none focus:border-teal-500/50 transition-colors">
+            @for (sym of symbols(); track sym) {
+              <option [value]="sym">{{ sym }}</option>
+            }
+          </select>
+        </div>
+
+        <!-- Timeframe -->
+        <div>
+          <label class="block text-xs text-neutral-400 mb-2">Timeframe</label>
+          <div class="flex items-center gap-1 bg-[#0A0B0E] border border-white/10 rounded-lg p-1">
+            <button
+              (click)="onTimeframeChange('4H')"
+              class="px-3 py-1.5 text-xs font-medium rounded transition-colors"
+              [class]="timeframe() === '4H' ? 'text-black bg-teal-400' : 'text-neutral-500 hover:text-white'">
+              4H
+            </button>
+            <button
+              (click)="onTimeframeChange('Daily')"
+              class="px-3 py-1.5 text-xs font-medium rounded transition-colors"
+              [class]="timeframe() === 'Daily' ? 'text-black bg-teal-400' : 'text-neutral-500 hover:text-white'">
+              Daily
+            </button>
+          </div>
+        </div>
+
+        <!-- Dernier Candle OHLC -->
+        <div class="flex items-center gap-4 px-4 py-3 bg-white/5 border border-emerald-500/30 rounded-lg">
+          <!-- Candle visuel -->
+          <div class="flex flex-col items-center justify-center">
+            <div class="text-[8px] text-neutral-500 uppercase mb-1">Dernier Candle</div>
+            <svg width="40" height="80" viewBox="0 0 40 80">
+              @if (isBullish()) {
+                <!-- Mèche haute -->
+                <line x1="20" y1="5" x2="20" y2="25" stroke="#10b981" stroke-width="2"/>
+                <!-- Corps (vert = haussier) -->
+                <rect x="12" y="25" width="16" height="35" fill="#10b981" opacity="0.9"/>
+                <!-- Mèche basse -->
+                <line x1="20" y1="60" x2="20" y2="75" stroke="#10b981" stroke-width="2"/>
+              } @else {
+                <!-- Mèche haute -->
+                <line x1="20" y1="5" x2="20" y2="25" stroke="#9333ea" stroke-width="2"/>
+                <!-- Corps (violet = baissier) -->
+                <rect x="12" y="25" width="16" height="35" fill="#9333ea" opacity="0.9"/>
+                <!-- Mèche basse -->
+                <line x1="20" y1="60" x2="20" y2="75" stroke="#9333ea" stroke-width="2"/>
+              }
+            </svg>
+          </div>
+
+          <!-- Prix OHLC -->
+          <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
+            <div>
+              <div class="text-neutral-500">Open</div>
+              <div class="text-white font-semibold">{{ formatPrice(ohlc().open) }}</div>
+            </div>
+            <div>
+              <div class="text-neutral-500">High</div>
+              <div class="text-emerald-500 font-semibold">{{ formatPrice(ohlc().high) }}</div>
+            </div>
+            <div>
+              <div class="text-neutral-500">Low</div>
+              <div class="text-rose-500 font-semibold">{{ formatPrice(ohlc().low) }}</div>
+            </div>
+            <div>
+              <div class="text-neutral-500">Close</div>
+              <div class="text-white font-bold">{{ formatPrice(ohlc().close) }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Prix actuel -->
+        <div class="text-right">
+          <div class="text-xs text-neutral-400 mb-1">Prix actuel</div>
+          <span class="text-2xl font-bold text-white font-geist">{{ formatPrice(ohlc().close) }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Graphique Candlestick -->
+  <div class="dashboard-card p-6 mb-6 animate-fade-in">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-lg font-bold text-white font-geist">Price Chart</h2>
+      <div class="flex items-center gap-2">
+        <button class="p-2 hover:bg-white/5 rounded-lg transition-colors">
+          <iconify-icon icon="mdi:download" width="18" class="text-neutral-400"></iconify-icon>
+        </button>
+        <button class="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-neutral-400 text-xs rounded-lg transition-colors">Indicateurs</button>
+      </div>
+    </div>
+
+    <!-- Candlestick Chart Container -->
+    <div class="relative bg-gradient-to-br from-emerald-950/20 to-purple-950/20 rounded-2xl p-6 border border-emerald-500/10">
+      @if (chartOptions().series.length > 0) {
+        <apx-chart
+          [series]="chartOptions().series"
+          [chart]="chartOptions().chart"
+          [xaxis]="chartOptions().xaxis"
+          [yaxis]="chartOptions().yaxis"
+          [plotOptions]="chartOptions().plotOptions"
+          [grid]="chartOptions().grid"
+          [theme]="chartOptions().theme"
+          [tooltip]="chartOptions().tooltip"
+          [dataLabels]="chartOptions().dataLabels"
+          [stroke]="chartOptions().stroke">
+        </apx-chart>
+      } @else {
+        <div class="h-[450px] flex items-center justify-center">
+          <app-empty-state icon="mdi:chart-candlestick" title="Aucune donnée de prix disponible" />
+        </div>
+      }
+
+      <!-- Volume Chart -->
+      @if (volumeChartOptions().series.length > 0) {
+        <apx-chart
+          [series]="volumeChartOptions().series"
+          [chart]="volumeChartOptions().chart"
+          [xaxis]="volumeChartOptions().xaxis"
+          [yaxis]="volumeChartOptions().yaxis"
+          [plotOptions]="volumeChartOptions().plotOptions"
+          [grid]="volumeChartOptions().grid"
+          [theme]="volumeChartOptions().theme"
+          [tooltip]="volumeChartOptions().tooltip"
+          [dataLabels]="volumeChartOptions().dataLabels">
+        </apx-chart>
+      }
+    </div>
+  </div>
+
+  <!-- Indicators Panel Below Chart -->
+  @if (indicators()) {
+    <div class="dashboard-card p-6 animate-fade-in">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-1 h-6 bg-purple-500 rounded-full"></div>
+        <h2 class="text-base font-bold text-white font-geist">Indicateurs détaillés</h2>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
+        <!-- RSI -->
+        <div class="p-3 bg-white/5 border border-white/10 rounded-lg text-center">
+          <div class="text-[10px] text-neutral-500 uppercase tracking-wide mb-1">RSI</div>
+          <div class="text-lg font-bold font-geist"
+               [class]="indicators()!.indicators.rsi > 70 ? 'text-rose-500' : indicators()!.indicators.rsi < 30 ? 'text-emerald-500' : 'text-white'">
+            {{ formatNumber(indicators()!.indicators.rsi) }}
+          </div>
+        </div>
+        <!-- Stochastic K -->
+        <div class="p-3 bg-white/5 border border-white/10 rounded-lg text-center">
+          <div class="text-[10px] text-neutral-500 uppercase tracking-wide mb-1">Stoch K</div>
+          <div class="text-lg font-bold text-white font-geist">{{ formatNumber(indicators()!.indicators.stochastic_k) }}</div>
+        </div>
+        <!-- EMA 20 -->
+        <div class="p-3 bg-white/5 border border-white/10 rounded-lg text-center">
+          <div class="text-[10px] text-neutral-500 uppercase tracking-wide mb-1">EMA 20</div>
+          <div class="text-lg font-bold text-white font-geist">{{ formatPrice(indicators()!.indicators.ema_20) }}</div>
+        </div>
+        <!-- EMA 50 -->
+        <div class="p-3 bg-white/5 border border-white/10 rounded-lg text-center">
+          <div class="text-[10px] text-neutral-500 uppercase tracking-wide mb-1">EMA 50</div>
+          <div class="text-lg font-bold text-white font-geist">{{ formatPrice(indicators()!.indicators.ema_50) }}</div>
+        </div>
+        <!-- EMA 200 -->
+        <div class="p-3 bg-white/5 border border-white/10 rounded-lg text-center">
+          <div class="text-[10px] text-neutral-500 uppercase tracking-wide mb-1">EMA 200</div>
+          <div class="text-lg font-bold text-white font-geist">{{ formatPrice(indicators()!.indicators.ema_200) }}</div>
+        </div>
+        <!-- Pivot Point -->
+        <div class="p-3 bg-white/5 border border-white/10 rounded-lg text-center">
+          <div class="text-[10px] text-neutral-500 uppercase tracking-wide mb-1">Pivot</div>
+          <div class="text-lg font-bold text-white font-geist">{{ formatPrice(indicators()!.indicators.pivot_point) }}</div>
+        </div>
+        <!-- R1 -->
+        <div class="p-3 bg-white/5 border border-white/10 rounded-lg text-center">
+          <div class="text-[10px] text-neutral-500 uppercase tracking-wide mb-1">R1</div>
+          <div class="text-lg font-bold text-rose-500 font-geist">{{ formatPrice(indicators()!.indicators.resistance_1) }}</div>
+        </div>
+        <!-- S1 -->
+        <div class="p-3 bg-white/5 border border-white/10 rounded-lg text-center">
+          <div class="text-[10px] text-neutral-500 uppercase tracking-wide mb-1">S1</div>
+          <div class="text-lg font-bold text-emerald-500 font-geist">{{ formatPrice(indicators()!.indicators.support_1) }}</div>
+        </div>
+      </div>
+    </div>
+  }
+
+  }
+</main>

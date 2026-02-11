@@ -1,0 +1,7 @@
+<div class="flex gap-1">
+  @for (s of strategies(); track s.strategy_name) {
+    <div [class]="getSphereClass(s.recommendation)" [title]="s.strategy_name">
+      {{ getSphereLabel(s.recommendation) }}
+    </div>
+  }
+</div>
