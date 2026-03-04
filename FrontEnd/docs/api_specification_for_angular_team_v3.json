@@ -1,0 +1,557 @@
+{
+  "project_name": "Neural Trading - API Specification",
+  "version": "3.0 - Updated with historical/indicators routes and auth improvements",
+  "backend_base_url": "http://localhost:8080",
+  "last_updated": "2026-02-08",
+  "authentication": {
+    "type": "JWT Bearer Token",
+    "header_format": "Authorization: Bearer {token}",
+    "token_location": "Returned in login/register response, store in localStorage/sessionStorage",
+    "additional_features": [
+      "Email verification system (token sent after registration)",
+      "Password reset with temporary tokens (1h expiration)",
+      "Google OAuth support (automatic account creation)"
+    ]
+  },
+  
+  "frontend_calculations_summary": {
+    "description": "To minimize backend routes, these calculations are performed on the frontend using data from existing routes",
+    "dashboard_page": [
+      "% Gain (positions) = (current_price - prix_moyen) / prix_moyen * 100",
+      "Consensus Badge (Strong Buy/Buy/Hold/Sell) = Majority vote from strategies array",
+      "Total Gain KPI = Sum of gain_dollars from /api/trades/closed",
+      "Positions Ouvertes KPI = Count from /api/trades/open",
+      "Temps Moyen KPI = Average temps_jours from /api/trades/closed"
+    ],
+    "trade_page": [
+      "Win/Loss Ratio = Count positive vs negative gains",
+      "Performance filters (Jour/Semaine/Mois/Année) = Client-side date filtering",
+      "All table filters (Symbol, Devise, Période, Performance) = Client-side",
+      "Pagination = Client-side on full dataset",
+      "Total Profits = Sum of positive gain_dollars",
+      "Avg Holding Time = Average temps_jours"
+    ],
+    "wallet_page": [
+      "Total Déposé = Sum of transactions where action='ajout'",
+      "Total Retiré = Sum of transactions where action='retrait'",
+      "Gains Réalisés = Sum from /api/trades/closed where gain_dollars > 0",
+      "Pertes Réalisées = Sum from /api/trades/closed where gain_dollars < 0",
+      "ROI Global = (gains - pertes) / total_depose * 100",
+      "Vignette counts = Filter and count by transaction type"
+    ],
+    "chart_page": [
+      "OHLC Display = Extract from last candle in historical data",
+      "Volume bars = From historical data volume field",
+      "EMA overlays = From /api/indicators/:symbol endpoint"
+    ]
+  },
+  
+  "pages": [
+    {
+      "page_name": "Login & Signup",
+      "description": "Page d'authentification avec formulaire d'inscription (username, email, password) et Google OAuth",
+      "html_observations": {
+        "signup_form": "Formulaire complet avec username, email, password, terms checkbox",
+        "login_form": "Login avec email et password",
+        "google_oauth_button": "Présent et fonctionnel",
+        "fields_required": ["username", "email", "password"]
+      },
+      "routes": [
+        {
+          "method": "POST",
+          "endpoint": "/api/auth/register",
+          "description": "Créer un nouveau compte avec username (nom complet) et email",
+          "requires_auth": false,
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "request_body": {
+            "username": "John Doe",
+            "email": "john.doe@company.com",
+            "password": "SecurePass123"
+          },
+          "response_success": {
+            "status_code": 200,
+            "body": {
+              "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+              "user": {
+                "id": 2,
+                "username": "John Doe",
+                "email": "john.doe@company.com"
+              },
+              "message": "Account created! Please check your email to verify your account."
+            }
+          },
+          "backend_status": "IMPLEMENTED ✅"
+        },
+        {
+          "method": "POST",
+          "endpoint": "/api/auth/login",
+          "description": "Authentifier avec email et password",
+          "requires_auth": false,
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "request_body": {
+            "email": "paul@example.com",
+            "password": "myPassword123"
+          },
+          "response_success": {
+            "status_code": 200,
+            "body": {
+              "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+              "user": {
+                "id": 1,
+                "username": "Paul Tremblay",
+                "email": "paul@example.com"
+              }
+            }
+          },
+          "backend_status": "IMPLEMENTED ✅"
+        },
+        {
+          "method": "GET",
+          "endpoint": "/api/auth/me",
+          "description": "Vérifier le token JWT et obtenir les informations de l'utilisateur connecté",
+          "requires_auth": true,
+          "headers": {
+            "Authorization": "Bearer {token}",
+            "Content-Type": "application/json"
+          },
+          "response_success": {
+            "status_code": 200,
+            "body": {
+              "id": 1,
+              "username": "Paul Tremblay",
+              "email": "paul@example.com"
+            }
+          },
+          "backend_status": "IMPLEMENTED ✅"
+        },
+        {
+          "method": "POST",
+          "endpoint": "/api/auth/change-password",
+          "description": "Changer le mot de passe (utilisateur connecté)",
+          "requires_auth": true,
+          "headers": {
+            "Authorization": "Bearer {token}",
+            "Content-Type": "application/json"
+          },
+          "request_body": {
+            "current_password": "OldPass123",
+            "new_password": "NewPass456"
+          },
+          "response_success": {
+            "status_code": 200,
+            "body": {
+              "message": "Password changed successfully"
+            }
+          },
+          "backend_status": "IMPLEMENTED ✅"
+        },
+        {
+          "method": "POST",
+          "endpoint": "/api/auth/forgot-password",
+          "description": "Demander un lien de réinitialisation de mot de passe par email",
+          "requires_auth": false,
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "request_body": {
+            "email": "paul@example.com"
+          },
+          "response_success": {
+            "status_code": 200,
+            "body": {
+              "message": "Si cet email existe, un lien de réinitialisation a été envoyé."
+            }
+          },
+          "backend_status": "IMPLEMENTED ✅",
+          "notes": "Envoie un email avec un token valide 1h"
+        },
+        {
+          "method": "POST",
+          "endpoint": "/api/auth/reset-password",
+          "description": "Réinitialiser le mot de passe avec un token",
+          "requires_auth": false,
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "request_body": {
+            "token": "uuid-token-from-email",
+            "new_password": "NewSecurePass123"
+          },
+          "response_success": {
+            "status_code": 200,
+            "body": {
+              "message": "Password reset successful. You can now login with your new password."
+            }
+          },
+          "backend_status": "IMPLEMENTED ✅"
+        },
+        {
+          "method": "GET",
+          "endpoint": "/api/auth/verify-email",
+          "description": "Vérifier l'email avec un token",
+          "requires_auth": false,
+          "query_params": {
+            "token": "uuid-token-from-email"
+          },
+          "response_success": {
+            "status_code": 200,
+            "body": {
+              "message": "Email verified successfully. Your account is now active."
+            }
+          },
+          "backend_status": "IMPLEMENTED ✅"
+        },
+        {
+          "method": "POST",
+          "endpoint": "/api/auth/google",
+          "description": "Authentification Google OAuth (login ou création automatique de compte)",
+          "requires_auth": false,
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "request_body": {
+            "id_token": "google-oauth-id-token"
+          },
+          "response_success": {
+            "status_code": 200,
+            "body": {
+              "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+              "user": {
+                "id": 3,
+                "username": "john",
+                "email": "john@gmail.com"
+              },
+              "is_new_user": true
+            }
+          },
+          "backend_status": "IMPLEMENTED ✅",
+          "notes": "Si l'email existe déjà, fait un login. Sinon, crée automatiquement un compte."
+        }
+      ]
+    },
+    
+    {
+      "page_name": "Dashboard",
+      "description": "Page principale avec header KPIs, vignettes positions (Gain+/Gain-/Top Achats), watchlist et graphique performance",
+      "html_observations": {
+        "header_kpis": ["Portfolio Total", "Trésorerie", "Boutons Dépôt/Retrait"],
+        "kpi_cards": ["Gain Total + %", "Positions Ouvertes (count)", "Temps Moyen (jours)"],
+        "vignette_trades_positifs": "Liste positions avec gain positif + 5 strategy spheres + % gain",
+        "vignette_trades_negatifs": "Liste positions avec gain négatif + 5 strategy spheres + % perte",
+        "vignette_top_achats": "Stocks avec consensus BUY (non dans positions)",
+        "watchlist": "Stocks suivis avec stratégies + barre de recherche + bouton Ajouter",
+        "graphique_performance": "Courbe portfolio avec toggles Dépôts/Retraits/Gains + filtres temporels (1J/1S/1M/1A/Tout)",
+        "strategy_spheres": "5 sphères colorées B/H/S pour chaque position",
+        "consensus_badges": "Strong Buy, Buy, Hold, Sell, Strong Sell (calculé frontend)"
+      },
+      "routes": [
+        {
+          "method": "GET",
+          "endpoint": "/api/wallet/balance",
+          "description": "Portfolio total et trésorerie par devise",
+          "requires_auth": true,
+          "headers": {
+            "Authorization": "Bearer {token}",
+            "Content-Type": "application/json"
+          },
+          "response_example": {
+            "portfolio_total": 2847291.43,
+            "tresorerie": 1200450.00,
+            "balances": {
+              "CAD": 800300.00,
+              "USD": 350150.00,
+              "EUR": 50000.00
+            }
+          },
+          "used_in": "Header - Portfolio Total, Trésorerie",
+          "backend_status": "EXISTS"
+        },
+        {
+          "method": "POST",
+          "endpoint": "/api/wallet/transaction",
+          "description": "Ajouter dépôt ou retrait",
+          "requires_auth": true,
+          "request_body": {
+            "date": "2025-12-31",
+            "action": "ajout",
+            "amount": 5000.00,
+            "currency": "CAD"
+          },
+          "response_example": {
+            "success": true,
+            "new_balance": 805300.00
+          },
+          "used_in": "Header - Boutons Dépôt/Retrait",
+          "backend_status": "EXISTS"
+        },
+        {
+          "method": "GET",
+          "endpoint": "/api/trades/open",
+          "description": "Positions ouvertes (pour compter le nombre)",
+          "requires_auth": true,
+          "response_example": [
+            {
+              "symbol": "AAPL",
+              "quantite_totale": 100,
+              "prix_moyen": 145.50,
+              "entry_date": "2025-01-15"
+            }
+          ],
+          "used_in": "KPI Card - Positions Ouvertes (count)",
+          "frontend_calculation": "Count array length",
+          "backend_status": "EXISTS"
+        },
+        {
+          "method": "GET",
+          "endpoint": "/api/trades/closed",
+          "description": "Trades fermés pour calculer gain total et temps moyen",
+          "requires_auth": true,
+          "response_example": [
+            {
+              "symbol": "AAPL",
+              "gain_dollars": 1175.00,
+              "pourcentage_gain": 7.81,
+              "temps_jours": 36,
+              "devise": "USD",
+              "quantite_achat": 100,
+              "quantite_vente": 100
+            }
+          ],
+          "used_in": "KPI Cards - Gain Total, Temps Moyen",
+          "frontend_calculations": [
+            "Gain Total = Sum(gain_dollars)",
+            "Temps Moyen = Average(temps_jours)"
+          ],
+          "backend_status": "UPDATED ✅",
+          "changes": "Ajout des champs: devise, quantite_achat, quantite_vente"
+        },
+        {
+          "method": "GET",
+          "endpoint": "/api/trades/open-with-recommendations",
+          "description": "Positions ouvertes avec current_price et stratégies",
+          "requires_auth": true,
+          "response_example": [
+            {
+              "symbol": "AAPL",
+              "quantite_totale": 100,
+              "prix_moyen": 145.50,
+              "current_price": 157.25,
+              "entry_date": "2025-01-15",
+              "stock": {
+                "symbol": "AAPL",
+                "name": "Apple Inc."
+              },
+              "strategies": [
+                {
+                  "strategy_name": "RSI",
+                  "recommendation": "BUY",
+                  "metadata": {"rsi_value": 28.5}
+                }
+              ]
+            }
+          ],
+          "used_in": "Vignettes Gain+/Gain-",
+          "frontend_calculations": [
+            "% Gain = (current_price - prix_moyen) / prix_moyen * 100",
+            "Gain $ = (current_price - prix_moyen) * quantite_totale"
+          ],
+          "backend_status": "EXISTS"
+        },
+        {
+          "method": "GET",
+          "endpoint": "/api/stocks/with-strategies",
+          "description": "Tous les stocks avec leurs stratégies (dernière date calculée)",
+          "requires_auth": true,
+          "response_example": [
+            {
+              "stock": {
+                "symbol": "AAPL",
+                "name": "Apple Inc."
+              },
+              "strategies": [
+                {
+                  "strategy_name": "RSI",
+                  "recommendation": "BUY",
+                  "metadata": {"rsi_value": 28.5}
+                }
+              ]
+            }
+          ],
+          "used_in": "Vignette Top Achats + Watchlist",
+          "backend_status": "EXISTS"
+        }
+      ]
+    },
+    
+    {
+      "page_name": "Chart",
+      "description": "Page de graphique avec candlestick OHLC, volume bars, indicateurs techniques en overlay, et panneau latéral de stratégies",
+      "html_observations": {
+        "chart_container": "Graphique candlestick avec zoom et pan",
+        "ohlc_display": "OHLC values affichés en header",
+        "volume_chart": "Barres de volume sous le graphique principal",
+        "indicators_panel": "RSI, Stochastic, MACD, EMA affichés dans panneau latéral",
+        "strategy_panel": "5 stratégies avec recommandations B/H/S",
+        "timeframe_selector": "4H, Daily, Weekly, Monthly"
+      },
+      "routes": [
+        {
+          "method": "GET",
+          "endpoint": "/api/stocks/historical/{symbol}",
+          "description": "Données OHLCV historiques pour graphique candlestick",
+          "requires_auth": true,
+          "headers": {
+            "Authorization": "Bearer {token}",
+            "Content-Type": "application/json"
+          },
+          "url_params": {
+            "symbol": "Symbol ticker (ex: AAPL)"
+          },
+          "query_params": {
+            "timeframe": "4H or Daily (optional, default: Daily)",
+            "start_date": "Optional - format DD/MM/YYYY",
+            "end_date": "Optional - format DD/MM/YYYY"
+          },
+          "response_example": {
+            "symbol": "AAPL",
+            "timeframe": "Daily",
+            "data": [
+              {
+                "timestamp": "15/01/2025",
+                "open": 145.50,
+                "high": 148.25,
+                "low": 144.00,
+                "close": 147.80,
+                "volume": 58234567
+              }
+            ]
+          },
+          "backend_status": "IMPLEMENTED ✅",
+          "notes": "Retourne les derniers 365 jours pour Daily, 180 points pour 4H"
+        },
+        {
+          "method": "GET",
+          "endpoint": "/api/indicators/{symbol}",
+          "description": "Valeurs calculées des indicateurs techniques + historical EMA pour overlay",
+          "requires_auth": true,
+          "headers": {
+            "Authorization": "Bearer {token}",
+            "Content-Type": "application/json"
+          },
+          "url_params": {
+            "symbol": "Symbol ticker"
+          },
+          "query_params": {
+            "timeframe": "4H or Daily (optional, default: Daily)"
+          },
+          "response_example": {
+            "symbol": "AAPL",
+            "timeframe": "Daily",
+            "latest_date": "15/01/2025",
+            "indicators": {
+              "rsi": 28.5,
+              "stochastic_k": 32.1,
+              "ema_20": 145.30,
+              "ema_50": 142.80,
+              "ema_200": 138.50,
+              "pivot_point": 146.50,
+              "resistance_1": 148.20,
+              "support_1": 144.80
+            },
+            "historical_ema_50": [
+              {
+                "date": "13/01/2025",
+                "value": 142.60
+              },
+              {
+                "date": "14/01/2025",
+                "value": 142.70
+              },
+              {
+                "date": "15/01/2025",
+                "value": 142.80
+              }
+            ]
+          },
+          "backend_status": "IMPLEMENTED ✅",
+          "notes": "historical_ema_50 contient les 100 derniers points pour overlay sur le chart"
+        }
+      ]
+    }
+  ],
+  
+  "database_changes": {
+    "users_rust": {
+      "added_columns": [
+        "email VARCHAR UNIQUE NOT NULL"
+      ],
+      "notes": "Migration SQL exécutée pour ajouter email avec index unique"
+    },
+    "trades_fermes_rust": {
+      "added_columns": [
+        "devise VARCHAR NOT NULL DEFAULT 'USD'",
+        "quantite_achat DECIMAL(15,4) NOT NULL DEFAULT 0",
+        "quantite_vente DECIMAL(15,4) NOT NULL DEFAULT 0"
+      ],
+      "notes": "Migration SQL exécutée. Devise peuplée depuis table stock. Quantités peuplées depuis table trade_rust."
+    }
+  },
+  
+  "implementation_status": {
+    "completed": [
+      "✅ POST /api/auth/register - Accepte {username, email, password}",
+      "✅ POST /api/auth/login - Login par email au lieu de username",
+      "✅ GET /api/auth/me - Informations utilisateur connecté",
+      "✅ POST /api/auth/change-password - Changement de mot de passe",
+      "✅ POST /api/auth/forgot-password - Reset password par email",
+      "✅ POST /api/auth/reset-password - Réinitialisation avec token",
+      "✅ GET /api/auth/verify-email - Vérification email avec token",
+      "✅ POST /api/auth/google - Google OAuth (login/register)",
+      "✅ GET /api/stocks/historical/{symbol} - Données OHLCV pour charts",
+      "✅ GET /api/indicators/{symbol} - Indicateurs techniques + EMA overlay",
+      "✅ GET /api/trades/closed - Ajout devise, quantite_achat, quantite_vente"
+    ],
+    "verified": [
+      "✅ Database migrations exécutées (users_rust, trades_fermes_rust)",
+      "✅ Models Rust mis à jour",
+      "✅ Routes configurées dans mod.rs",
+      "✅ Services implémentés"
+    ]
+  },
+  
+  "notes_for_frontend_team": {
+    "authentication": "Store JWT token after login/register. Add 'Authorization: Bearer {token}' header to all protected routes.",
+    "error_handling": "All errors return {error: 'message'}. Handle 401 (redirect to login), 403 (permission denied), 400 (validation), 500 (server error).",
+    "date_formats": {
+      "requests": "DD/MM/YYYY for user input (ex: 31/12/2025)",
+      "responses": "DD/MM/YYYY from backend (historique, indicators)",
+      "display": "Format selon locale utilisateur"
+    },
+    "currency_handling": "All amounts are decimal numbers. Supported currencies: CAD, USD, EUR.",
+    "calculations_frontend": "Most KPIs and aggregations should be calculated client-side to reduce backend complexity. See 'frontend_calculations_summary' section.",
+    "strategy_spheres": "5 colored spheres (B/H/S) displayed for each position. Colors: Buy=#10b981 (green), Hold=#f59e0b (orange), Sell=#ef4444 (red).",
+    "consensus_logic": "Count BUY/SELL/HOLD from strategies array. Majority determines badge: Strong Buy (4-5 BUY), Buy (3 BUY), Hold (3 HOLD or mixed), Sell (3 SELL), Strong Sell (4-5 SELL).",
+    "percentage_calculations": "Always calculate % as: (current_price - prix_moyen) / prix_moyen * 100. Display with + or - prefix and color accordingly.",
+    "real_time_prices": "current_price in /api/trades/open-with-recommendations is updated daily, NOT real-time tick data.",
+    "pagination": "Apply client-side on full dataset. No backend pagination needed for initial version.",
+    "filters": "All table filters (Symbol, Devise, Période, Performance) are client-side filters on full dataset.",
+    "multi_sale_trades": "When same symbol has multiple sales, display as indented rows with gray background. See trade.html for visual reference.",
+    "empty_states": "Handle empty arrays gracefully with appropriate messages (ex: 'Aucune position ouverte', 'Aucun trade fermé').",
+    "loading_states": "Show skeleton loaders or spinners while fetching data.",
+    "responsive_design": "All pages must be mobile-optimized. HTML uses Tailwind responsive classes (sm:, md:, lg:).",
+    "email_verification": "After registration, user receives email with verification link. Account is functional immediately but email_verified flag is false until verified.",
+    "password_reset_flow": "User requests reset → receives email with link → clicks link → enters new password → can login with new password.",
+    "google_oauth_flow": "Frontend gets id_token from Google → sends to /api/auth/google → receives JWT token + user info → redirect to dashboard."
+  },
+  
+  "backend_development_complete": {
+    "all_routes_implemented": true,
+    "database_migrations_applied": true,
+    "authentication_system_complete": true,
+    "chart_data_endpoints_ready": true
+  }
+}

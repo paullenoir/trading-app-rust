@@ -1,0 +1,17 @@
+<div class="dashboard-card p-5">
+  <div class="flex items-center gap-3 mb-3">
+    <div class="p-2 rounded-lg" [class]="iconBg()">
+      <iconify-icon [icon]="icon()" width="18" [class]="iconColor()"></iconify-icon>
+    </div>
+    <span class="text-sm text-neutral-400 font-medium">{{ label() }}</span>
+  </div>
+  <div class="flex items-baseline gap-2">
+    <span class="text-3xl font-bold text-white font-geist">{{ value() }}</span>
+    @if (suffix()) {
+      <span class="text-lg text-neutral-500">{{ suffix() }}</span>
+    }
+    @if (badge()) {
+      <span class="text-xs font-semibold px-2 py-1 rounded" [class]="badgeColor()">{{ badge() }}</span>
+    }
+  </div>
+</div>

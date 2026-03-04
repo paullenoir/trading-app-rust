@@ -1,0 +1,263 @@
+<app-navbar />
+
+<main class="max-w-[1600px] mx-auto px-6 py-8">
+
+  @if (loading()) {
+    <app-loading-skeleton />
+  } @else {
+
+  <!-- KPI CARDS -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 animate-fade-in">
+    <app-kpi-card
+      icon="mdi:trending-up" iconColor="text-emerald-500" iconBg="bg-emerald-500/10"
+      label="Gain Total"
+      [value]="formatCurrency(totalGain())"
+      [badge]="formatPercent(totalGainPercent())"
+      badgeColor="text-emerald-500 bg-emerald-500/10" />
+    <app-kpi-card
+      icon="mdi:chart-line" iconColor="text-teal-400" iconBg="bg-teal-400/10"
+      label="Positions Ouvertes"
+      [value]="'' + openCount()"
+      [badge]="positivePositions().length + '+ \u2022 ' + negativePositions().length + '\u2212'"
+      badgeColor="text-neutral-500" />
+    <app-kpi-card
+      icon="mdi:clock-outline" iconColor="text-orange-500" iconBg="bg-orange-500/10"
+      label="Temps Moyen Détention"
+      [value]="'' + avgHoldingTime()"
+      suffix="jours" />
+  </div>
+
+  <!-- TRADES VIGNETTES -->
+  <div class="animate-fade-in">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+
+      <!-- GAIN + -->
+      <div class="dashboard-card p-5">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <div class="w-1 h-6 bg-emerald-500 rounded-full"></div>
+            <div>
+              <h2 class="text-lg font-bold text-white font-geist">Trades Gain +</h2>
+              <div class="flex items-center gap-3 text-xs mt-1">
+                <span class="text-emerald-500 font-semibold">{{ formatCurrency(totalPositiveGain()) }}</span>
+                <span class="text-neutral-500">{{ positivePositions().length }} pos</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="section-container space-y-2">
+          @for (pos of positivePositions(); track pos.symbol) {
+            <a [routerLink]="['/chart', pos.symbol]" class="position-card">
+              <div class="symbol-price-box">
+                <div class="text-base font-bold text-white font-geist mb-1">{{ pos.symbol }}</div>
+                <div class="text-[9px] text-neutral-600 mb-0.5">Q: {{ pos.quantite_totale }}</div>
+                <div class="price-two-line">
+                  <div class="text-[10px] text-neutral-500"><span class="text-neutral-600">A:</span> {{ formatCurrencyFull(pos.prix_moyen) }}</div>
+                  <div class="text-[11px] text-emerald-500 font-semibold"><span class="text-emerald-600">C:</span> {{ formatCurrencyFull(pos.current_price) }}</div>
+                </div>
+                <div class="company-name">{{ pos.stock.name }}</div>
+              </div>
+              <div class="flex items-center justify-between">
+                <div class="strategies-badges-container">
+                  <app-strategy-spheres [strategies]="pos.strategies" />
+                  <span [class]="getBadgeClass(pos.consensus)">{{ pos.consensus }}</span>
+                </div>
+                <div class="text-xl font-bold text-emerald-500">{{ formatPercent(pos.gainPercent) }}</div>
+              </div>
+            </a>
+          } @empty {
+            <app-empty-state icon="mdi:trending-up" title="Aucune position en gain" />
+          }
+        </div>
+      </div>
+
+      <!-- GAIN - -->
+      <div class="dashboard-card p-5">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <div class="w-1 h-6 bg-rose-500 rounded-full"></div>
+            <div>
+              <h2 class="text-lg font-bold text-white font-geist">Trades Gain &minus;</h2>
+              <div class="flex items-center gap-3 text-xs mt-1">
+                <span class="text-rose-500 font-semibold">{{ formatCurrency(totalNegativeGain()) }}</span>
+                <span class="text-neutral-500">{{ negativePositions().length }} pos</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="section-container space-y-2">
+          @for (pos of negativePositions(); track pos.symbol) {
+            <a [routerLink]="['/chart', pos.symbol]" class="position-card">
+              <div class="symbol-price-box">
+                <div class="text-base font-bold text-white font-geist mb-1">{{ pos.symbol }}</div>
+                <div class="text-[9px] text-neutral-600 mb-0.5">Q: {{ pos.quantite_totale }}</div>
+                <div class="price-two-line">
+                  <div class="text-[10px] text-neutral-500"><span class="text-neutral-600">A:</span> {{ formatCurrencyFull(pos.prix_moyen) }}</div>
+                  <div class="text-[11px] text-rose-500 font-semibold"><span class="text-rose-600">C:</span> {{ formatCurrencyFull(pos.current_price) }}</div>
+                </div>
+                <div class="company-name">{{ pos.stock.name }}</div>
+              </div>
+              <div class="flex items-center justify-between">
+                <div class="strategies-badges-container">
+                  <app-strategy-spheres [strategies]="pos.strategies" />
+                  <span [class]="getBadgeClass(pos.consensus)">{{ pos.consensus }}</span>
+                </div>
+                <div class="text-xl font-bold text-rose-500">{{ formatPercent(pos.gainPercent) }}</div>
+              </div>
+            </a>
+          } @empty {
+            <app-empty-state icon="mdi:trending-down" title="Aucune position en perte" />
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM SECTION: Top Achats | Performance | Watchlist -->
+  <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 animate-fade-in">
+
+    <!-- TOP ACHATS -->
+    <div class="lg:col-span-1">
+      <div class="dashboard-card p-5">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-1 h-6 bg-teal-400 rounded-full"></div>
+          <h2 class="text-base font-bold text-white font-geist">Top Achats</h2>
+        </div>
+        <div class="space-y-3">
+          @for (stock of topAchats(); track stock.stock.symbol) {
+            <a [routerLink]="['/chart', stock.stock.symbol]" class="block p-3 rounded-lg bg-white/5 border border-emerald-500/20 hover:bg-white/10 cursor-pointer transition-all">
+              <div class="flex items-center justify-between mb-2">
+                <div class="text-sm font-bold text-white font-geist">{{ stock.stock.symbol }}</div>
+                <div class="text-sm font-bold text-teal-400">{{ stock.stock.name }}</div>
+              </div>
+              <div class="flex items-center justify-between">
+                <app-strategy-spheres [strategies]="stock.strategies" />
+                <span [class]="getBadgeClass(getConsensusForStock(stock))" class="text-[8px]">{{ getConsensusForStock(stock) }}</span>
+              </div>
+            </a>
+          } @empty {
+            <app-empty-state icon="mdi:cart-outline" title="Aucun top achat" />
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- PERFORMANCE CHART -->
+    <div class="lg:col-span-2">
+      <div class="dashboard-card p-6">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <div class="w-1 h-6 bg-purple-500 rounded-full"></div>
+            <h2 class="text-base font-bold text-white font-geist">Performance Portefeuille</h2>
+          </div>
+          <div class="flex items-center gap-2">
+            @for (f of timeFilters; track f) {
+              <button (click)="timeFilter.set(f)"
+                class="px-2 py-1 text-xs font-medium rounded transition-colors"
+                [class]="f === timeFilter() ? 'text-white bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.3)]' : 'text-neutral-500 hover:text-white hover:bg-white/5'">
+                {{ f }}
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="flex items-center gap-4 mb-4 pb-4 border-b border-white/5 flex-wrap">
+          <label class="flex items-center gap-2 cursor-pointer text-xs">
+            <input type="checkbox" checked class="w-3 h-3 accent-teal-400">
+            <span class="text-teal-400">Dépôts</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer text-xs">
+            <input type="checkbox" checked class="w-3 h-3 accent-purple-400">
+            <span class="text-purple-400">Retraits</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer text-xs">
+            <input type="checkbox" checked class="w-3 h-3 accent-emerald-500">
+            <span class="text-emerald-500">Gains</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer text-xs">
+            <input type="checkbox" checked class="w-3 h-3 accent-rose-500">
+            <span class="text-rose-500">Pertes</span>
+          </label>
+        </div>
+
+        <!-- Chart placeholder -->
+        <div class="h-[280px] relative">
+          <div class="absolute inset-0 flex flex-col justify-between pointer-events-none">
+            <div class="chart-grid-line"></div>
+            <div class="chart-grid-line"></div>
+            <div class="chart-grid-line"></div>
+            <div class="chart-grid-line"></div>
+            <div class="chart-grid-line"></div>
+          </div>
+          <svg width="100%" height="100%" viewBox="0 0 800 280" preserveAspectRatio="none">
+            <polyline points="0,220 100,200 200,180 300,190 400,140 500,120 600,100 700,110 800,60"
+              fill="none" stroke="rgba(100,116,139,0.3)" stroke-width="1.5"/>
+            <circle cx="0" cy="220" r="5" fill="#2dd4bf" opacity="0.9" class="chart-point"/>
+            <circle cx="200" cy="180" r="6" fill="#2dd4bf" opacity="0.9" class="chart-point"/>
+            <circle cx="500" cy="120" r="7" fill="#2dd4bf" opacity="0.9" class="chart-point"/>
+            <circle cx="300" cy="190" r="4" fill="#c084fc" opacity="0.8" class="chart-point"/>
+            <circle cx="600" cy="100" r="5" fill="#c084fc" opacity="0.8" class="chart-point"/>
+            <circle cx="100" cy="200" r="6" fill="#10b981" opacity="0.9" class="chart-point"/>
+            <circle cx="400" cy="140" r="8" fill="#10b981" opacity="0.9" class="chart-point"/>
+            <circle cx="700" cy="110" r="7" fill="#10b981" opacity="0.9" class="chart-point"/>
+            <circle cx="150" cy="195" r="3" fill="#ef4444" opacity="0.8" class="chart-point"/>
+            <circle cx="350" cy="165" r="4" fill="#ef4444" opacity="0.8" class="chart-point"/>
+            <circle cx="500" cy="120" r="10" fill="#2dd4bf" opacity="0.2"/>
+            <circle cx="400" cy="140" r="12" fill="#10b981" opacity="0.2"/>
+          </svg>
+          <div class="absolute right-0 top-0 bottom-0 flex flex-col justify-between text-[10px] text-neutral-500 pr-2">
+            <span>$500k</span><span>$400k</span><span>$300k</span><span>$200k</span><span>$100k</span>
+          </div>
+        </div>
+        <div class="flex justify-between text-[10px] text-neutral-500 mt-2 px-2">
+          <span>Jan</span><span>Mar</span><span>Mai</span><span>Jul</span><span>Sep</span><span>Nov</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- WATCHLIST -->
+    <div class="lg:col-span-1">
+      <div class="dashboard-card p-5">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-1 h-6 bg-orange-500 rounded-full"></div>
+          <h2 class="text-base font-bold text-white font-geist">Watchlist</h2>
+        </div>
+
+        <!-- Search -->
+        <div class="relative mb-4">
+          <input type="text" placeholder="Rechercher..."
+            [ngModel]="watchlistSearch()" (ngModelChange)="watchlistSearch.set($event)"
+            class="w-full px-3 py-2 text-sm bg-[#0A0B0E] border border-white/10 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:border-teal-500/50 transition-colors">
+          <iconify-icon icon="mdi:magnify" width="16" class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500"></iconify-icon>
+        </div>
+
+        <!-- Items -->
+        <div class="space-y-2 mb-4">
+          @for (stock of filteredWatchlist(); track stock.stock.symbol) {
+            <a [routerLink]="['/chart', stock.stock.symbol]" class="block p-2 rounded-lg bg-white/5 hover:bg-white/10 cursor-pointer transition-all">
+              <div class="flex items-center justify-between mb-1">
+                <div class="text-sm font-bold text-white font-geist">{{ stock.stock.symbol }}</div>
+                <div class="text-sm font-bold text-white">{{ stock.stock.name }}</div>
+              </div>
+              <div class="flex items-center justify-between">
+                <app-strategy-spheres [strategies]="stock.strategies" />
+                <span [class]="getBadgeClass(getConsensusForStock(stock))" class="text-[8px]">{{ getConsensusForStock(stock) }}</span>
+              </div>
+            </a>
+          } @empty {
+            <app-empty-state icon="mdi:eye-outline" title="Aucun résultat" />
+          }
+        </div>
+
+        <!-- Add button -->
+        <button class="w-full py-2 bg-teal-400/10 hover:bg-teal-400/20 border border-teal-400/30 text-teal-400 text-sm font-semibold rounded-lg transition-colors flex items-center justify-center gap-2">
+          <iconify-icon icon="mdi:plus" width="16"></iconify-icon>
+          Ajouter
+        </button>
+      </div>
+    </div>
+  </div>
+
+  }
+</main>

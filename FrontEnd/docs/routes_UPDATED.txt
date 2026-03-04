@@ -1,0 +1,80 @@
+## Routes Backend Rust - LISTE COMPLÈTE
+
+### HEALTH
+- **GET** `/api/health` - Vérifier que l'API fonctionne
+
+### STOCKS
+- **GET** `/api/stocks` - Récupérer tous les stocks
+- **GET** `/api/stocks/with-strategies` - Récupérer les stocks avec leurs stratégies (dernière date)
+- **GET** `/api/stocks/historical/{symbol}` - Récupérer l'historique OHLCV d'un symbole (protégée) **[NOUVEAU]**
+  - Query params: `timeframe`, `start_date`, `end_date`
+
+### INDICATORS
+- **GET** `/api/indicators/{symbol}` - Récupérer les indicateurs techniques d'un symbole (protégée) **[NOUVEAU]**
+  - Query params: `timeframe`
+  - Retourne: RSI, Stochastic, EMA (20/50/200), Point Pivot, historique EMA50
+
+### ADMIN
+- **POST** `/api/admin/strategies/calculate` - Calculer les indicateurs et stratégies par défaut pour tous les symboles (RSI, Stochastic, EMA, Point Pivot, MinMaxLastYear)
+
+### AUTH
+- **POST** `/api/auth/register` - Créer un compte utilisateur
+  - Body: `{username, email, password}` **[MODIFIÉ]**
+- **POST** `/api/auth/login` - Se connecter **[MODIFIÉ]**
+  - Body: `{email, password}` (login par email au lieu de username)
+- **GET** `/api/auth/me` - Vérifier son token JWT (protégée)
+- **POST** `/api/auth/change-password` - Changer son mot de passe (protégée)
+- **POST** `/api/auth/forgot-password` - Demander reset password **[NOUVEAU]**
+- **POST** `/api/auth/reset-password` - Réinitialiser mot de passe avec token **[NOUVEAU]**
+- **GET** `/api/auth/verify-email` - Vérifier l'email avec token **[NOUVEAU]**
+- **POST** `/api/auth/google` - Authentification Google OAuth **[NOUVEAU]**
+
+### WALLET
+- **POST** `/api/wallet/deposit` - Ajouter de l'argent au wallet (protégée)
+- **POST** `/api/wallet/withdraw` - Retirer de l'argent du wallet (protégée)
+- **GET** `/api/wallet/history` - Voir l'historique du wallet (protégée)
+- **GET** `/api/wallet/balance` - Voir les soldes CAD/USD/EUR (protégée)
+
+### TRADES
+- **POST** `/api/trades` - Acheter/Vendre une action (protégée)
+- **GET** `/api/trades` - Voir tous les trades (protégée)
+- **GET** `/api/trades/open` - Voir les positions ouvertes (protégée)
+- **GET** `/api/trades/open-with-recommendations` - Positions ouvertes avec recommandations de stratégies (protégée)
+- **GET** `/api/trades/closed` - Voir les trades fermés avec gains/pertes (protégée) **[MODIFIÉ]**
+  - Retourne maintenant: `devise`, `quantite_achat`, `quantite_vente`
+
+## MODIFICATIONS APPORTÉES
+
+### 1. AUTH - Login par email
+- `LoginRequest` accepte maintenant `{email, password}` au lieu de `{username, password}`
+- Le login se fait par email pour améliorer la sécurité
+- Le username stocke le nom complet de l'utilisateur (ex: "John Doe")
+
+### 2. NOUVELLES ROUTES
+- **GET** `/api/stocks/historical/{symbol}` - Données OHLCV pour charts
+- **GET** `/api/indicators/{symbol}` - Indicateurs techniques pour overlays
+
+### 3. AUTH COMPLÈTE
+- Ajout de 4 nouvelles routes d'authentification:
+  - Forgot password (envoi email avec token)
+  - Reset password (réinitialisation avec token)
+  - Verify email (vérification après inscription)
+  - Google OAuth (login/register avec Google)
+
+### 4. TRADES FERMÉS
+- La route `/api/trades/closed` retourne maintenant:
+  - `devise` (CAD/USD/EUR)
+  - `quantite_achat` (quantité achetée)
+  - `quantite_vente` (quantité vendue)
+
+## NOTES TECHNIQUES
+
+### Base de données
+- Table `users_rust`: Ajout colonne `email` (UNIQUE)
+- Table `trades_fermes_rust`: Ajout colonnes `devise`, `quantite_achat`, `quantite_vente`
+
+### Authentification
+- JWT tokens pour toutes les routes protégées
+- Support Google OAuth (création automatique de compte)
+- Email verification system avec tokens temporaires
+- Password reset avec tokens à expiration (1h)

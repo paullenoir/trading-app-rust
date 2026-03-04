@@ -1,0 +1,239 @@
+<app-navbar />
+
+<main class="max-w-[1600px] mx-auto px-6 py-8">
+
+  @if (loading()) {
+    <app-loading-skeleton />
+  } @else {
+
+  <!-- Layout: KPIs (2x2 gauche) + Formulaire (droite) -->
+  <div class="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-6 animate-fade-in">
+
+    <!-- KPIs 2x2 (2 colonnes = 40%) -->
+    <div class="lg:col-span-2 grid grid-cols-2 gap-6">
+
+      <!-- Total Deposited -->
+      <div class="dashboard-card p-5">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="p-2 rounded-lg bg-emerald-500/10">
+            <iconify-icon icon="mdi:arrow-down" width="18" class="text-emerald-500"></iconify-icon>
+          </div>
+          <span class="text-sm text-neutral-400 font-medium">Total D&eacute;pos&eacute;</span>
+        </div>
+        <div class="text-3xl font-bold text-white font-geist">${{ totalDeposited().toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) }}</div>
+      </div>
+
+      <!-- Total Withdrawn -->
+      <div class="dashboard-card p-5">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="p-2 rounded-lg bg-rose-500/10">
+            <iconify-icon icon="mdi:arrow-up" width="18" class="text-rose-500"></iconify-icon>
+          </div>
+          <span class="text-sm text-neutral-400 font-medium">Total Retir&eacute;</span>
+        </div>
+        <div class="text-3xl font-bold text-white font-geist">${{ totalWithdrawn().toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) }}</div>
+      </div>
+
+      <!-- Realized Gains -->
+      <div class="dashboard-card p-5">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="p-2 rounded-lg bg-teal-400/10">
+            <iconify-icon icon="mdi:chart-line" width="18" class="text-teal-400"></iconify-icon>
+          </div>
+          <span class="text-sm text-neutral-400 font-medium">Gains R&eacute;alis&eacute;s</span>
+        </div>
+        <div class="flex items-baseline gap-2">
+          <span class="text-3xl font-bold font-geist" [class]="(realizedGains() + realizedLosses()) >= 0 ? 'text-emerald-500' : 'text-rose-500'">{{ formatCurrency(realizedGains() + realizedLosses()) }}</span>
+        </div>
+      </div>
+
+      <!-- ROI Global -->
+      <div class="dashboard-card p-5">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="p-2 rounded-lg bg-purple-500/10">
+            <iconify-icon icon="mdi:percent" width="18" class="text-purple-500"></iconify-icon>
+          </div>
+          <span class="text-sm text-neutral-400 font-medium">ROI Global</span>
+        </div>
+        <div class="text-3xl font-bold font-geist" [class]="roiGlobal() >= 0 ? 'text-emerald-500' : 'text-rose-500'">{{ formatPercent(roiGlobal()) }}</div>
+      </div>
+
+    </div>
+
+    <!-- Formulaire Nouvelle Transaction (3 colonnes = 60%) -->
+    <div class="lg:col-span-3 dashboard-card p-6">
+      <div class="flex items-center gap-3 mb-6">
+        <div class="w-1 h-6 bg-teal-400 rounded-full"></div>
+        <h2 class="text-lg font-bold text-white font-geist">Nouvelle Transaction</h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        <!-- Type d'operation -->
+        <div>
+          <label class="block text-sm text-neutral-400 mb-2">Type</label>
+          <div class="flex gap-2">
+            <button
+              (click)="transactionType.set('ajout')"
+              class="flex-1 py-2 px-4 rounded-lg text-sm font-semibold transition-colors"
+              [class]="transactionType() === 'ajout'
+                ? 'bg-emerald-500/20 text-emerald-500 border border-emerald-500/40 hover:bg-emerald-500/30'
+                : 'bg-white/5 text-neutral-400 border border-white/10 hover:bg-white/10'">
+              D&eacute;p&ocirc;t
+            </button>
+            <button
+              (click)="transactionType.set('retrait')"
+              class="flex-1 py-2 px-4 rounded-lg text-sm font-semibold transition-colors"
+              [class]="transactionType() === 'retrait'
+                ? 'bg-rose-500/20 text-rose-500 border border-rose-500/40 hover:bg-rose-500/30'
+                : 'bg-white/5 text-neutral-400 border border-white/10 hover:bg-white/10'">
+              Retrait
+            </button>
+          </div>
+        </div>
+
+        <!-- Montant -->
+        <div>
+          <label class="block text-sm text-neutral-400 mb-2">Montant</label>
+          <input
+            type="number"
+            placeholder="0.00"
+            step="0.01"
+            [ngModel]="amount()"
+            (ngModelChange)="amount.set($event)"
+            class="w-full px-4 py-2 bg-[#0A0B0E] border border-white/10 rounded-lg text-white placeholder-neutral-600 focus:outline-none focus:border-teal-500/50 transition-colors"
+          />
+        </div>
+
+        <!-- Devise -->
+        <div>
+          <label class="block text-sm text-neutral-400 mb-2">Devise</label>
+          <select
+            [ngModel]="currency()"
+            (ngModelChange)="currency.set($event)"
+            class="w-full px-4 py-2 bg-[#0A0B0E] border border-white/10 rounded-lg text-white focus:outline-none focus:border-teal-500/50 transition-colors">
+            <option>USD</option>
+            <option>CAD</option>
+            <option>EUR</option>
+          </select>
+        </div>
+
+        <!-- Date -->
+        <div>
+          <label class="block text-sm text-neutral-400 mb-2">Date</label>
+          <input
+            type="date"
+            [ngModel]="transactionDate()"
+            (ngModelChange)="transactionDate.set($event)"
+            class="w-full px-4 py-2 bg-[#0A0B0E] border border-white/10 rounded-lg text-white focus:outline-none focus:border-teal-500/50 transition-colors"
+          />
+        </div>
+
+      </div>
+
+      <div class="mt-6 flex justify-center">
+        <button
+          (click)="submitTransaction()"
+          class="px-6 py-2.5 bg-teal-400 hover:bg-teal-500 text-black font-semibold rounded-lg transition-colors flex items-center gap-2">
+          <iconify-icon icon="mdi:check" width="18"></iconify-icon>
+          Enregistrer
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Historique Complet -->
+  <div class="dashboard-card p-6 mb-6 animate-fade-in">
+    <div class="flex items-center justify-between mb-6">
+      <div class="flex items-center gap-3">
+        <div class="w-1 h-6 bg-purple-500 rounded-full"></div>
+        <div>
+          <h2 class="text-lg font-bold text-white font-geist">Historique Complet</h2>
+          <div class="text-xs text-neutral-500 mt-1">{{ filteredHistory().length }} transactions (D&eacute;p&ocirc;ts &bull; Retraits &bull; Gains)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="flex items-center gap-3 mb-4">
+      @for (filter of filterOptions; track filter) {
+        <button
+          (click)="setFilter(filter)"
+          class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors"
+          [class]="filter === activeFilter()
+            ? 'bg-teal-400/20 text-teal-400 border border-teal-400/40'
+            : 'bg-white/5 text-neutral-400 hover:bg-white/10'">
+          {{ filter }}
+        </button>
+      }
+    </div>
+
+    <!-- Header -->
+    <div class="transaction-row font-semibold text-xs text-neutral-500 border-b-2 border-white/10">
+      <div>TYPE / SYMBOL</div>
+      <div>DATE</div>
+      <div>MONTANT</div>
+      <div>DEVISE / %</div>
+    </div>
+
+    <div class="section-container">
+      @for (item of pagedHistory(); track $index) {
+
+        @if (item.type === 'deposit') {
+          <!-- Deposit row -->
+          <div class="transaction-row">
+            <div><span class="badge-deposit">D&eacute;p&ocirc;t</span></div>
+            <div class="text-sm text-neutral-400">{{ formatDate(item.date) }}</div>
+            <div class="text-sm font-bold text-emerald-500">{{ formatCurrencyFull(item.amount) }}</div>
+            <div class="text-sm text-neutral-400">{{ item.currency }}</div>
+          </div>
+        }
+
+        @if (item.type === 'withdrawal') {
+          <!-- Withdrawal row -->
+          <div class="transaction-row">
+            <div><span class="badge-withdrawal">Retrait</span></div>
+            <div class="text-sm text-neutral-400">{{ formatDate(item.date) }}</div>
+            <div class="text-sm font-bold text-rose-500">{{ formatCurrencyFull(-item.amount) }}</div>
+            <div class="text-sm text-neutral-400">{{ item.currency }}</div>
+          </div>
+        }
+
+        @if (item.type === 'gain_positive') {
+          <!-- Positive gain row -->
+          <div class="transaction-row">
+            <div class="text-sm font-bold text-white font-geist">{{ item.symbol }}</div>
+            <div class="text-sm text-neutral-400">{{ formatDate(item.date) }}</div>
+            <div class="text-sm font-bold text-emerald-500">{{ formatCurrencyFull(item.amount) }}</div>
+            <div class="text-sm font-bold text-emerald-500">{{ formatPercent(item.percentage || 0) }}</div>
+          </div>
+        }
+
+        @if (item.type === 'gain_negative') {
+          <!-- Negative gain row -->
+          <div class="transaction-row">
+            <div class="text-sm font-bold text-white font-geist">{{ item.symbol }}</div>
+            <div class="text-sm text-neutral-400">{{ formatDate(item.date) }}</div>
+            <div class="text-sm font-bold text-rose-500">{{ formatCurrencyFull(item.amount) }}</div>
+            <div class="text-sm font-bold text-rose-500">{{ formatPercent(item.percentage || 0) }}</div>
+          </div>
+        }
+
+      } @empty {
+        <app-empty-state icon="mdi:history" title="Aucune transaction" subtitle="Les transactions appara&icirc;tront ici" />
+      }
+    </div>
+
+    <!-- Pagination -->
+    @if (filteredHistory().length > pageSize()) {
+      <app-pagination
+        [currentPage]="currentPage()"
+        [totalItems]="filteredHistory().length"
+        [pageSize]="pageSize()"
+        (pageChange)="onPageChange($event)" />
+    }
+  </div>
+
+  }
+</main>
